@@ -296,44 +296,27 @@ export const pizzas = [
   }
 ];
 
-export const alcoholicDrinks = [
+export const fruits = [
   {
     id: 1,
-    name: "Beer",
-    price: 200,
-    category: "Alcoholic"
+    name: "Banana",
+    price: 50,
+    category: "Vegetarian"
   },
   {
     id: 2,
-    name: "Whiskey",
-    price: 500,
-    category: "Alcoholic"
+    name: "Apple",
+    price: 40,
+    category: "Vegetarian"
   },
   {
     id: 3,
-    name: "Vodka",
-    price: 450,
-    category: "Alcoholic"
-  },
-  {
-    id: 4,
-    name: "Rum",
-    price: 350,
-    category: "Alcoholic"
-  },
-  {
-    id: 5,
-    name: "Tequila",
-    price: 600,
-    category: "Alcoholic"
-  },
-  {
-    id: 6,
-    name: "Cocktail",
-    price: 400,
-    category: "Alcoholic"
+    name: "Kiwi",
+    price: 50,
+    category: "Vegetarian"
   }
 ];
+
 
 export const salads = [
   {
@@ -370,15 +353,16 @@ export const salads = [
 
 
 export const menus = [
-  { id: 1, name: "Starters", bgColor: "#b73e3e" ,icon: "🍲", items: startersItem },
-  { id: 2, name: "Main Course", bgColor: "#5b45b0" ,icon: "🍛", items: mainCourse },
-  { id: 3, name: "Beverages", bgColor: "#7f167f" ,icon: "🍹", items: beverages },
-  { id: 4, name: "Soups", bgColor: "#735f32" ,icon: "🍜", items: soups },
-  { id: 5, name: "Desserts", bgColor: "#1d2569" ,icon: "🍰", items: desserts },
-  { id: 6, name: "Pizzas", bgColor: "#285430" ,icon: "🍕", items: pizzas },
-  { id: 7, name: "Alcoholic Drinks", bgColor: "#b73e3e" ,icon: "🍺", items: alcoholicDrinks },
-  { id: 8, name: "Salads", bgColor: "#5b45b0" ,icon: "🥗", items: salads }
-]
+  { id: 1, name: "Starters", bgColor: "#b73e3e", icon: "🍲", items: startersItem },
+  { id: 2, name: "Main Course", bgColor: "#5b45b0", icon: "🍛", items: mainCourse },
+  { id: 3, name: "Beverages", bgColor: "#7f167f", icon: "🍹", items: beverages },
+  { id: 4, name: "Soups", bgColor: "#735f32", icon: "🍜", items: soups },
+  { id: 5, name: "Desserts", bgColor: "#1d2569", icon: "🍰", items: desserts },
+  { id: 6, name: "Pizzas", bgColor: "#285430", icon: "🍕", items: pizzas },
+  { id: 7, name: "Salads", bgColor: "#5b45b0", icon: "🥗", items: salads },
+  { id: 8, name: "Fruits", bgColor: "#c76a29", icon: "🍎", items: fruits }
+];
+
 
 export const metricsData = [
   { title: "Revenue", value: "₹50,846.90", percentage: "12%", color: "#025cca", isIncrease: false },
