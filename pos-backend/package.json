@@ -20,7 +20,10 @@
     "http-errors": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
-    "razorpay": "^2.9.5"
+    "multer": "^1.4.5-lts.1",
+    "node-telegram-bot-api": "^0.66.0",
+    "razorpay": "^2.9.5",
+    "sequelize": "^6.37.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

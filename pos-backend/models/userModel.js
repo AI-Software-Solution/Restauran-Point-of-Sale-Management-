@@ -38,7 +38,8 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         required: true
-    }
+    },
+    token: {type: String}
 }, { timestamps : true })
 
 userSchema.pre('save', async function (next) {

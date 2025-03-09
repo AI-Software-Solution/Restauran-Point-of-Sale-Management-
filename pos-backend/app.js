@@ -23,12 +23,13 @@ app.use(cookieParser())
 app.get("/", (req,res) => {
     res.json({message : "Hello from POS Server!"});
 })
-
 // Other Endpoints
 app.use("/api/user", require("./routes/userRoute"));
 app.use("/api/order", require("./routes/orderRoute"));
 app.use("/api/table", require("./routes/tableRoute"));
 app.use("/api/payment", require("./routes/paymentRoute"));
+app.use("/api/category", require("./routes/categoryRoute"))
+app.use("/api/product", require("./routes/productRoute"))
 
 // Global Error Handler
 app.use(globalErrorHandler);

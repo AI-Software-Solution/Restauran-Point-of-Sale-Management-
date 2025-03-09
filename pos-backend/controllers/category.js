@@ -25,12 +25,25 @@ const addCategory = async (req, res, next) => {
 
 const getCategories = async (req, res, next) => {
   try {
-    const categories = await Category.find()
+    const categories = await Category.find().populate('product')
     res.status(200).json({ success: true, data: categories });
   } catch (error) {
     next(error);
   }
 };
+
+const getOneCategory = async (req, res, next) => {
+  try {
+    const {id} = req.params
+    const category = await Category.findById(id)
+    const products = await Product.find({category: id})
+
+    res.status(200).json({category, products})
+  } catch (error) {
+    console.error(error)
+    next(error)
+  }
+}
 
 const updateCategory = async (req, res, next) => {
   try {
@@ -53,7 +66,7 @@ const updateCategory = async (req, res, next) => {
       return error;
     }
 
-    res.status(200).json({success: true, message: "Category updated!", data: product});
+    res.status(200).json({success: true, message: "Category updated!", data: category});
 
   } catch (error) {
     next(error);
@@ -75,4 +88,4 @@ const deleteCategory = async (req, res, next) => {
     }
 }
 
-module.exports = { addCategory, getCategories, updateCategory, deleteCategory };
+module.exports = { addCategory, getCategories, updateCategory, deleteCategory, getOneCategory };
