@@ -24,7 +24,7 @@ const register = async (req, res, next) => {
             const error = createHttpError(400, "User already exist!");
             return next(error);
         }
-    
+    /// create token
         const newUser = await User.create({name, phone, email, password, role})
 
         const payload = { email: newUser.email, id: newUser._id, role: newUser.role };
