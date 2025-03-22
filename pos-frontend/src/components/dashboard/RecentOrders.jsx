@@ -17,7 +17,7 @@ const RecentOrders = () => {
     mutationFn: ({orderId, orderStatus}) => updateOrderStatus({orderId, orderStatus}),
     onSuccess: (data) => {
       enqueueSnackbar("Order status updated successfully!", { variant: "success" });
-      queryClient.invalidateQueries(["orders"]); // Refresh order list
+      queryClient.invalidateQueries(["orders"]); 
     },
     onError: () => {
       enqueueSnackbar("Failed to update order status!", { variant: "error" });

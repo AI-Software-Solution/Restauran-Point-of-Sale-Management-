@@ -10,6 +10,7 @@ router.route("/login").post(login);
 router.route("/logout").post(isVerifiedUser, logout)
 router.route("/update").put(isVerifiedUser, updateUserData)
 router.route("/delete").delete(isVerifiedUser, deleteUserData)
+router.route("/getAll").get()
 
 router.route("/").get(isVerifiedUser , getUserData);
 

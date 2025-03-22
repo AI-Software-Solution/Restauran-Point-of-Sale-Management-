@@ -44,6 +44,27 @@ const getOrders = async (req, res, next) => {
   }
 };
 
+const deleteOrders = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      const error = createHttpError(404, "Invalid id!");
+      return next(error);
+    }
+
+    const order = await Order.findByIdAndDelete(id);
+    if (!order) {
+      const error = createHttpError(404, "Order not found!");
+      return next(error);
+    }
+
+    res.status(200).json({ success: true, message: "order deleted successfully"});
+  } catch (error) {
+    next(error);
+  }
+};
+
 const updateOrder = async (req, res, next) => {
   try {
     const { orderStatus } = req.body;
@@ -73,4 +94,4 @@ const updateOrder = async (req, res, next) => {
   }
 };
 
-module.exports = { addOrder, getOrderById, getOrders, updateOrder };
+module.exports = { addOrder, getOrderById, getOrders, updateOrder, deleteOrders };

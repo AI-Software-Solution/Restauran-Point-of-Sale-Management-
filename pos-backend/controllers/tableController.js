@@ -37,6 +37,19 @@ const getTables = async (req, res, next) => {
     next(error);
   }
 };
+const deleteTable = async (req, res, next) => {
+  try {
+    const {id} = req.params
+    const table = await Table.findByIdAndDelete(id)
+    if(!table){
+      const error = createHttpError(404, "Table not found!");
+      return next(error);
+    }
+    res.status(200).json({ success: true, message: "Table deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const updateTable = async (req, res, next) => {
   try {
@@ -67,4 +80,4 @@ const updateTable = async (req, res, next) => {
   }
 };
 
-module.exports = { addTable, getTables, updateTable };
+module.exports = { addTable, getTables, updateTable, deleteTable };

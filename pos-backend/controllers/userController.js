@@ -3,11 +3,9 @@ const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const config = require("../config/config");
-// const TelegramBot = require('node-telegram-bot-api')
+
 require('dotenv').config()
 
-// const token = process.env.TG_TOKEN
-// const bot = new TelegramBot(token, {polling:true});
 
 const register = async (req, res, next) => {
     try {
@@ -24,12 +22,12 @@ const register = async (req, res, next) => {
             const error = createHttpError(400, "User already exist!");
             return next(error);
         }
-    /// create token
+    
         const newUser = await User.create({name, phone, email, password, role})
-
-        const payload = { email: newUser.email, id: newUser._id, role: newUser.role };
+        
+        const payload = { email: newUser.email, role: newUser.role };
         const accessToken = jwt.sign(payload, config.accessTokenSecret, {expiresIn : '1d'});
-
+        
         newUser.token = accessToken;
         await newUser.save();
 
@@ -39,58 +37,17 @@ const register = async (req, res, next) => {
 
     } catch (error) {
         next(error);
-        // bot.on("polling_error", (error) => {
-        //     console.error("Telegram Bot Error:", error);
-        // });
-        
     }
 }
 
-// const userSteps = {}
 
-// // Handle start commant
-// bot.onText(/\/start/, (msg) => {
-//     const chatId = msg.chat?.id;
-//     bot.sendMessage(chatId, `Assalam alaykum iltimos emailingizni kiriting:`)
-
-// // Store that this user is entering their email
-// userSteps[chatId] = 'waiting_for_email'
-// });
-
-// bot.on('message', async (msg) => {
-//     const chatId = msg.chat?.id;
-
-//     if(userSteps[chatId] === 'waiting_for_email'){
-//         const email = msg.text.trim().toLowerCase(); // Get user email
-
-//         try {
-//             // Find user by email
-//             let user = await User.findOne({email})
-
-//             if(!user){
-//                 bot.sendMessage(chatId, "Kechirasiz, bu email mavjud emas iltimos qayta tekshirib ko'ring")
-//             }else{
-//                 bot.sendMessage(chatId, `Sizning tokeningiz: ${user.token}`)
-//             }
-//         } catch (error) {
-//             console.error('Error finding user: ', error);            
-//         }
-
-//         delete userSteps[chatId]
-//     }
-// });
-
-// bot.on('polling_error', (error) => {
-//     console.error('Telegram bot error: ', error);
-    
-// })
 
 
 const login = async (req, res, next) => {
 
     try {
         
-        const { email, password } = req.body;
+        const { email, password, token } = req.body;
 
         if(!email || !password) {
             const error = createHttpError(400, "All fields are required!");
@@ -103,8 +60,8 @@ const login = async (req, res, next) => {
             return next(error);
         }
 
-        const isMatch = await bcrypt.compare(password, isUserPresent.password);
-        if(!isMatch){
+        const isPassMatch = await bcrypt.compare(password, isUserPresent.password);
+        if(!isPassMatch){
             const error = createHttpError(401, "Invalid Credentials");
             return next(error);
         }
@@ -129,6 +86,15 @@ const login = async (req, res, next) => {
         next(error);
     }
 
+}
+
+const getUsers = async (req, res, next) => {
+    try {
+        const users = await User.find()
+        res.status(200).json(users)
+    } catch (error) {
+        next(error)
+    }
 }
 
 const getUserData = async (req, res, next) => {
@@ -177,4 +143,4 @@ const logout = async (req, res, next) => {
 
 
 
-module.exports = { register, login, getUserData, logout, updateUserData, deleteUserData }
+module.exports = { register, login, getUserData, logout, updateUserData, deleteUserData, getUsers }
