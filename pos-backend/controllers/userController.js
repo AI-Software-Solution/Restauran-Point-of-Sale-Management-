@@ -66,6 +66,10 @@ const login = async (req, res, next) => {
             return next(error);
         }
 
+        const isTokenValid = await User.findOne({token})
+        if(!isTokenValid){
+            const error = createHttpError(403, "You can not enter without token")
+        }
         const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
             expiresIn : '1d'
         });
