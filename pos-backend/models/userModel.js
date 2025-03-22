@@ -39,7 +39,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    token: {type: String}
+    token: {type: String},
+    status: {type:Boolean, default:false}
 }, { timestamps : true })
 
 userSchema.pre('save', async function (next) {
