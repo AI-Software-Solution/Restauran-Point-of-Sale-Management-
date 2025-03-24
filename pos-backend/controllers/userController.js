@@ -60,16 +60,22 @@ const login = async (req, res, next) => {
             return next(error);
         }
 
+        if(token){
+           const istrue = await User.findOne({token})
+           if(!istrue){
+            const error = createHttpError(403, "You are not permitted");
+            return next(error);
+           }
+           return;
+        }
+
         const isPassMatch = await bcrypt.compare(password, isUserPresent.password);
         if(!isPassMatch){
             const error = createHttpError(401, "Invalid Credentials");
             return next(error);
         }
+         
 
-        const isTokenValid = await User.findOne({token})
-        if(!isTokenValid){
-            const error = createHttpError(403, "You can not enter without token")
-        }
         const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
             expiresIn : '1d'
         });

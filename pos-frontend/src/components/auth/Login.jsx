@@ -1,43 +1,43 @@
 import React, { useState } from "react";
-import { useMutation } from "@tanstack/react-query"
-import { login } from "../../https/index"
+import { useMutation } from "@tanstack/react-query";
+import { login } from "../../https/index";
 import { enqueueSnackbar } from "notistack";
-import { useDispatch } from "react-redux";
-import { setUser } from "../../redux/slices/userSlice";
 import { useNavigate } from "react-router-dom";
- 
+
 const Login = () => {
-    const navigate = useNavigate();
-    const dispatch = useDispatch();
-    const[formData, setFormData] = useState({
-      email: "",
-      password: "",
-    });
-  
-    const handleChange = (e) => {
-      setFormData({...formData, [e.target.name]: e.target.value});
-    }
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [isTokenRequired, setIsTokenRequired] = useState(false);
+  const [token, setToken] = useState("");
+  const navigate = useNavigate()
 
-  
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      loginMutation.mutate(formData);
-    }
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
-    const loginMutation = useMutation({
-      mutationFn: (reqData) => login(reqData),
-      onSuccess: (res) => {
-          const { data } = res;
-          console.log(data);
-          const { _id, name, email, phone, role } = data.data;
-          dispatch(setUser({ _id, name, email, phone, role }));
-          navigate("/");
-      },
-      onError: (error) => {
-        const { response } = error;
-        enqueueSnackbar(response.data.message, { variant: "error" });
+  const handleTokenChange = (e) => {
+    setToken(e.target.value);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    loginMutation.mutate(formData);
+  };
+
+  const loginMutation = useMutation({
+    mutationFn: (reqData) => login(reqData),
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        if (res.data.status === false) {
+          setIsTokenRequired(true);
+        }else(
+          navigate("/")
+        )
       }
-    })
+    },
+    onError: (error) => {
+      enqueueSnackbar(error.response.data.message, { variant: "error" });
+    },
+  });
 
   return (
     <div>
@@ -74,11 +74,24 @@ const Login = () => {
             />
           </div>
         </div>
-
-        <button
-          type="submit"
-          className="w-full rounded-lg mt-6 py-3 text-lg bg-yellow-400 text-gray-900 font-bold"
-        >
+      {isTokenRequired && (
+        <div>
+          <label className="block text-[#ababab] mb-2 mt-3 text-sm font-medium">
+            Enter Verification Token
+          </label>
+          <div className="flex item-center rounded-lg p-5 px-4 bg-[#1f1f1f]">
+            <input
+              type="text"
+              value={token}
+              onChange={handleTokenChange}
+              placeholder="Enter token"
+              className="bg-transparent flex-1 text-white focus:outline-none"
+              required
+            />
+          </div>
+        </div>
+      )}
+        <button type="submit" className="w-full rounded-lg mt-6 py-3 text-lg bg-yellow-400 text-gray-900 font-bold">
           Sign in
         </button>
       </form>

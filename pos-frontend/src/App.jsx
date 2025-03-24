@@ -10,6 +10,7 @@ import Header from "./components/shared/Header";
 import { useSelector } from "react-redux";
 import useLoadData from "./hooks/useLoadData";
 import FullScreenLoader from "./components/shared/FullScreenLoader"
+import SuperAdmin from "./pages/SuperAdmin";
 
 function Layout() {
   const isLoading = useLoadData();
@@ -61,6 +62,14 @@ function Layout() {
           element={
             <ProtectedRoutes>
               <Dashboard />
+            </ProtectedRoutes>
+          }
+        />
+        <Route
+          path="/admin_panel"
+          element={
+            <ProtectedRoutes>
+              <SuperAdmin />
             </ProtectedRoutes>
           }
         />

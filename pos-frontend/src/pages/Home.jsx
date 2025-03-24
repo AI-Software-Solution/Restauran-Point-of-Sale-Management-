@@ -25,9 +25,6 @@ const Home = () => {
         <RecentOrders />
       </div>
       {/* Right Div */}
-      <div className="flex-[2]">
-        <PopularDishes />
-      </div>
       <BottomNav />
     </section>
   );

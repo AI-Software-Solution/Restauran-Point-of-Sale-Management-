@@ -10,7 +10,15 @@ export const logout = () => axiosWrapper.post("/api/user/logout");
 
 // Table Endpoints
 export const addTable = (data) => axiosWrapper.post("/api/table/", data);
-export const getTables = () => axiosWrapper.get("/api/table");
+export const getTables = async () => {
+  try {
+    const response = await axiosWrapper.get("/api/table");
+    return response.data; // API dan kelgan ma'lumotni qaytaramiz
+  } catch (error) {
+    console.error("Error fetching tables:", error);
+    throw error; // Xatolikni qaytarib yuboramiz
+  }
+};
 export const updateTable = ({ tableId, ...tableData }) =>
   axiosWrapper.put(`/api/table/${tableId}`, tableData);
 
@@ -18,7 +26,7 @@ export const updateTable = ({ tableId, ...tableData }) =>
 export const createOrderRazorpay = (data) =>
   axiosWrapper.post("/api/payment/create-order", data);
 export const verifyPaymentRazorpay = (data) =>
-  axiosWrapper.post("/api/payment//verify-payment", data);
+  axiosWrapper.post("/api/payment/verify-payment", data);
 
 // Order Endpoints
 export const addOrder = (data) => axiosWrapper.post("/api/order/", data);
