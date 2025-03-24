@@ -1,34 +1,49 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import BottomNav from "../components/shared/BottomNav";
 import BackButton from "../components/shared/BackButton";
 import TableCard from "../components/tables/TableCard";
-import { tables } from "../constants";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { getTables } from "../https";
+import { useNavigate } from "react-router-dom";
+
+// API dan table ma'lumotlarini olish
+const getTables = async () => {
+  try {
+    const response = await axios.get("http://localhost:4000/api/table");
+    console.log("Fetched Tables:", response.data);
+    return response.data; // JSON ma'lumotni qaytarish
+  } catch (error) {
+    console.error("Error fetching tables:", error);
+    return []; // Xatolik bo‘lsa, bo‘sh array qaytarish
+  }
+};
 
 const Tables = () => {
   const [status, setStatus] = useState("all");
+  const navigateMenu = useNavigate();
 
-    useEffect(() => {
-      document.title = "POS | Tables"
-    }, [])
+  useEffect(() => {
+    document.title = "POS | Tables";
+  }, []);
 
   const { data: resData, isError } = useQuery({
     queryKey: ["tables"],
-    queryFn: async () => {
-      return await getTables();
-    },
+    queryFn: getTables,
     placeholderData: keepPreviousData,
   });
 
-  if(isError) {
-    enqueueSnackbar("Something went wrong!", { variant: "error" })
+  if (isError) {
+    console.error("Something went wrong while fetching tables!");
   }
 
-  console.log(resData);
+  // 📌 Filtrlangan ma'lumotlar
+  const filteredTables =
+    status === "all"
+      ? resData
+      : resData?.filter((table) => table.status === "Booked");
 
   return (
-    <section className="bg-[#1f1f1f]  h-[calc(100vh-5rem)] overflow-hidden">
+    <section className="bg-[#1f1f1f] h-[calc(100vh-5rem)] overflow-hidden">
       <div className="flex items-center justify-between px-10 py-4">
         <div className="flex items-center gap-4">
           <BackButton />
@@ -36,12 +51,25 @@ const Tables = () => {
             Tables
           </h1>
         </div>
+        <button
+          onClick={() => {
+            setStatus("takeaway");
+            navigateMenu("/menu");
+          }}
+          className={`text-lg px-5 py-2 font-semibold ${
+            status === "takeaway"
+              ? "bg-yellow-500 text-black"
+              : "text-[#ababab]"
+          } rounded-lg`}
+        >
+          Takeaway
+        </button>
         <div className="flex items-center justify-around gap-4">
           <button
             onClick={() => setStatus("all")}
             className={`text-[#ababab] text-lg ${
               status === "all" && "bg-[#383838] rounded-lg px-5 py-2"
-            }  rounded-lg px-5 py-2 font-semibold`}
+            } rounded-lg px-5 py-2 font-semibold`}
           >
             All
           </button>
@@ -49,7 +77,7 @@ const Tables = () => {
             onClick={() => setStatus("booked")}
             className={`text-[#ababab] text-lg ${
               status === "booked" && "bg-[#383838] rounded-lg px-5 py-2"
-            }  rounded-lg px-5 py-2 font-semibold`}
+            } rounded-lg px-5 py-2 font-semibold`}
           >
             Booked
           </button>
@@ -57,17 +85,22 @@ const Tables = () => {
       </div>
 
       <div className="grid grid-cols-5 gap-3 px-16 py-4 h-[650px] overflow-y-scroll scrollbar-hide">
-        {resData?.data.data.map((table) => {
-          return (
+        {filteredTables && filteredTables.length > 0 ? (
+          filteredTables.map((table) => (
             <TableCard
+              key={table._id}
               id={table._id}
-              name={table.tableNo}
+              name={`Table ${table.tableNo}`}
               status={table.status}
-              initials={table?.currentOrder?.customerDetails.name}
+              initials={table?.currentOrder?.customerDetails?.name || "No Name"}
               seats={table.seats}
             />
-          );
-        })}
+          ))
+        ) : (
+          <p className="text-white text-lg text-center w-full">
+            No tables available
+          </p>
+        )}
       </div>
 
       <BottomNav />

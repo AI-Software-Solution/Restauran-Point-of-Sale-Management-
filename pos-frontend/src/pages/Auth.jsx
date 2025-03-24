@@ -27,7 +27,7 @@ const Auth = () => {
           "Serve customers the best food with prompt and friendly service in a
           welcoming atmosphere, and they’ll keep coming back."
           <br />
-          <span className="block mt-4 text-yellow-400">- Founder of Restro</span>
+          <span className="block mt-4 text-yellow-400">- Software Solution</span>
         </blockquote>
       </div>
 

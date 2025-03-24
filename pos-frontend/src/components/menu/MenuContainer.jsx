@@ -1,16 +1,61 @@
-import React, { useState } from "react";
-import { menus } from "../../constants";
-import { GrRadialSelected } from "react-icons/gr";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { FaShoppingCart } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { addItems } from "../../redux/slices/cartSlice";
 
-
 const MenuContainer = () => {
-  const [selected, setSelected] = useState(menus[0]);
+  const [products, setProducts] = useState([]); // Mahsulotlar
+  const [categories, setCategories] = useState([]); // Kategoriyalar
+  const [selectedCategory, setSelectedCategory] = useState(null); // Tanlangan kategoriya
   const [itemCount, setItemCount] = useState(0);
   const [itemId, setItemId] = useState();
   const dispatch = useDispatch();
+
+  // 🔹 Kategoriyalarni API dan olish
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/api/category");
+        console.log("Fetched Categories:", response.data);
+
+        if (Array.isArray(response.data)) {
+          setCategories(response.data);
+          setSelectedCategory(response.data[0] || null); // Birinchi kategoriyani tanlash
+        } else {
+          console.error("Error: Expected an array but got:", response.data);
+          setCategories([]);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setCategories([]);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // 🔹 Mahsulotlarni API dan olish
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/api/product");
+        console.log("Fetched Products:", response.data);
+
+        if (Array.isArray(response.data)) {
+          setProducts(response.data);
+        } else {
+          console.error("Error: Expected an array but got:", response.data);
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setProducts([]);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const increment = (id) => {
     setItemId(id);
@@ -25,87 +70,98 @@ const MenuContainer = () => {
   };
 
   const handleAddToCart = (item) => {
-    if(itemCount === 0) return;
+    if (itemCount === 0) return;
 
-    const {name, price} = item;
-    const newObj = { id: new Date(), name, pricePerQuantity: price, quantity: itemCount, price: price * itemCount };
+    const { name, price } = item;
+    const newObj = {
+      id: new Date(),
+      name,
+      pricePerQuantity: price,
+      quantity: itemCount,
+      price: price * itemCount,
+    };
 
     dispatch(addItems(newObj));
     setItemCount(0);
-  }
-
+  };
 
   return (
     <>
+      {/* 🔹 Kategoriya tanlash */}
       <div className="grid grid-cols-4 gap-4 px-10 py-4 w-[100%]">
-        {menus.map((menu) => {
-          return (
+        {categories.length > 0 ? (
+          categories.map((category) => (
             <div
-              key={menu.id}
-              className="flex flex-col items-start justify-between p-4 rounded-lg h-[100px] cursor-pointer"
-              style={{ backgroundColor: menu.bgColor }}
+              key={category._id}
+              className={`flex flex-col items-start justify-between p-4 rounded-lg h-[100px] cursor-pointer ${
+                selectedCategory?._id === category._id ? "bg-[#025cca]" : "bg-[#1a1a1a]"
+              }`}
               onClick={() => {
-                setSelected(menu);
+                setSelectedCategory(category);
                 setItemId(0);
                 setItemCount(0);
               }}
             >
-              <div className="flex items-center justify-between w-full">
-                <h1 className="text-[#f5f5f5] text-lg font-semibold">
-                  {menu.icon} {menu.name}
-                </h1>
-                {selected.id === menu.id && (
-                  <GrRadialSelected className="text-white" size={20} />
-                )}
-              </div>
-              <p className="text-[#ababab] text-sm font-semibold">
-                {menu.items.length} Items
-              </p>
+              <h1 className="text-[#f5f5f5] text-lg font-semibold">
+                {category.name}
+              </h1>
             </div>
-          );
-        })}
+          ))
+        ) : (
+          <p className="text-white text-center col-span-4">No categories found</p>
+        )}
       </div>
 
       <hr className="border-[#2a2a2a] border-t-2 mt-4" />
 
+      {/* 🔹 Tanlangan kategoriya bo‘yicha mahsulotlar */}
       <div className="grid grid-cols-4 gap-4 px-10 py-4 w-[100%]">
-        {selected?.items.map((item) => {
-          return (
-            <div
-              key={item.id}
-              className="flex flex-col items-start justify-between p-4 rounded-lg h-[150px] cursor-pointer hover:bg-[#2a2a2a] bg-[#1a1a1a]"
-            >
-              <div className="flex items-start justify-between w-full">
-                <h1 className="text-[#f5f5f5] text-lg font-semibold">
-                  {item.name}
-                </h1>
-                <button onClick={() => handleAddToCart(item)} className="bg-[#2e4a40] text-[#02ca3a] p-2 rounded-lg"><FaShoppingCart size={20} /></button>
-              </div>
-              <div className="flex items-center justify-between w-full">
-                <p className="text-[#f5f5f5] text-xl font-bold">
-                  ₹{item.price}
-                </p>
-                <div className="flex items-center justify-between bg-[#1f1f1f] px-4 py-3 rounded-lg gap-6 w-[50%]">
+        {products.length > 0 ? (
+          products
+            .filter((product) => product.category === selectedCategory?._id) // 🔹 To‘g‘rilangan filter
+            .map((product) => (
+              <div
+                key={product._id}
+                className="flex flex-col items-start justify-between p-4 rounded-lg h-[150px] cursor-pointer hover:bg-[#2a2a2a] bg-[#1a1a1a]"
+              >
+                <div className="flex items-start justify-between w-full">
+                  <h1 className="text-[#f5f5f5] text-lg font-semibold">
+                    {product.name}
+                  </h1>
                   <button
-                    onClick={() => decrement(item.id)}
-                    className="text-yellow-500 text-2xl"
+                    onClick={() => handleAddToCart(product)}
+                    className="bg-[#2e4a40] text-[#02ca3a] p-2 rounded-lg"
                   >
-                    &minus;
-                  </button>
-                  <span className="text-white">
-                    {itemId == item.id ? itemCount : "0"}
-                  </span>
-                  <button
-                    onClick={() => increment(item.id)}
-                    className="text-yellow-500 text-2xl"
-                  >
-                    &#43;
+                    <FaShoppingCart size={20} />
                   </button>
                 </div>
+                <div className="flex items-center justify-between w-full">
+                  <p className="text-[#f5f5f5] text-xl font-bold">
+                    UZS {product.price}
+                  </p>
+                  <div className="flex items-center justify-between bg-[#1f1f1f] px-4 py-3 rounded-lg gap-6 w-[50%]">
+                    <button
+                      onClick={() => decrement(product._id)}
+                      className="text-yellow-500 text-2xl"
+                    >
+                      &minus;
+                    </button>
+                    <span className="text-white">
+                      {itemId === product._id ? itemCount : "0"}
+                    </span>
+                    <button
+                      onClick={() => increment(product._id)}
+                      className="text-yellow-500 text-2xl"
+                    >
+                      &#43;
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            ))
+        ) : (
+          <p className="text-white text-center col-span-4">No products found</p>
+        )}
       </div>
     </>
   );
