@@ -75,7 +75,7 @@ const BottomNav = () => {
       <button
         disabled={isActive("/tables") || isActive("/menu")}
         onClick={openModal}
-        className="absolute bottom-10 right-6 bg-[#F6B100] text-[#f5f5f5] rounded-full p-4 flex items-center"
+        className="absolute bottom-20 left-6 bg-[#F6B100] text-[#f5f5f5] rounded-full p-4 flex items-center"
       >
         <BiSolidDish size={40} />
       </button>
