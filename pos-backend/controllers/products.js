@@ -18,7 +18,7 @@ const addProduct = async (req, res, next) => {
     await newProduct.save();
     res
       .status(201)
-      .json({ success: true, message: "Product added!", data: newProduct });
+      .json(newProduct);
   } catch (error) {
     next(error.message);
   }
@@ -27,7 +27,7 @@ const addProduct = async (req, res, next) => {
 const getProducts = async (req, res, next) => {
   try {
     const products = await Product.find()
-    res.status(200).json({ success: true, data: products });
+    res.status(200).json( products);
   } catch (error) {
     next(error);
   }
@@ -42,7 +42,7 @@ const getOneProduct = async(req, res, next) => {
       const error = createHttpError(404, "There is no such product");
       return next(error);
     }
-    res.status(200).json({success:true, data: product})
+    res.status(200).json( product)
   } catch (error) {
     next(error)
   }
@@ -69,7 +69,7 @@ const updateProduct = async (req, res, next) => {
       return error;
     }
 
-    res.status(200).json({success: true, message: "Product updated!", data: product});
+    res.status(200).json(product);
 
   } catch (error) {
     next(error);

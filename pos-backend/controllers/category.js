@@ -17,7 +17,7 @@ const addCategory = async (req, res, next) => {
     await newCategory.save();
     res
       .status(201)
-      .json({ success: true, message: "Category added!", data: newCategory });
+      .json(newCategory);
   } catch (error) {
     next(error);
   }
@@ -25,8 +25,8 @@ const addCategory = async (req, res, next) => {
 
 const getCategories = async (req, res, next) => {
   try {
-    const categories = await Category.find().populate('product')
-    res.status(200).json({ success: true, data: categories });
+    const categories = await Category.find()
+    res.status(200).json(categories)
   } catch (error) {
     next(error);
   }
@@ -66,7 +66,7 @@ const updateCategory = async (req, res, next) => {
       return error;
     }
 
-    res.status(200).json({success: true, message: "Category updated!", data: category});
+    res.status(200).json(category);
 
   } catch (error) {
     next(error);
@@ -81,7 +81,7 @@ const deleteCategory = async (req, res, next) => {
             const error = createHttpError(400, 'Category not found')
             return error
         }
-        res.status(200).json({message: 'Category deleted successfully'})
+        res.status(200).json('Category deleted successfully')
 
     } catch (error) {
         

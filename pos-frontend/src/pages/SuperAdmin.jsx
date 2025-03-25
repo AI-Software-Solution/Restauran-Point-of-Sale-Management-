@@ -14,7 +14,7 @@ const SuperAdmin = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/user/users");
+      const response = await fetch("http://localhost:4000/api/user/getAll");
       const data = await response.json();
       setUsers(data);
     } catch (error) {

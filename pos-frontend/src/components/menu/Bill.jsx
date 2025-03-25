@@ -196,19 +196,19 @@ const Bill = () => {
           Items({cartData.lenght})
         </p>
         <h1 className="text-[#f5f5f5] text-md font-bold">
-          ₹{total.toFixed(2)}
+          {total.toFixed(2)}
         </h1>
       </div>
       <div className="flex items-center justify-between px-5 mt-2">
         <p className="text-xs text-[#ababab] font-medium mt-2">Tax(5.25%)</p>
-        <h1 className="text-[#f5f5f5] text-md font-bold">₹{tax.toFixed(2)}</h1>
+        <h1 className="text-[#f5f5f5] text-md font-bold">{tax.toFixed(2)}</h1>
       </div>
       <div className="flex items-center justify-between px-5 mt-2">
         <p className="text-xs text-[#ababab] font-medium mt-2">
           Total With Tax
         </p>
         <h1 className="text-[#f5f5f5] text-md font-bold">
-          ₹{totalPriceWithTax.toFixed(2)}
+          {totalPriceWithTax.toFixed(2)}
         </h1>
       </div>
       <div className="flex items-center gap-3 px-5 mt-4">
