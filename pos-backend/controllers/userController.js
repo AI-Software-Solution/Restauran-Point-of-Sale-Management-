@@ -60,15 +60,6 @@ const login = async (req, res, next) => {
             return next(error);
         }
 
-        if(token){
-           const istrue = await User.findOne({token})
-           if(!istrue){
-            const error = createHttpError(403, "You are not permitted");
-            return next(error);
-           }
-           return;
-        }
-
         const isPassMatch = await bcrypt.compare(password, isUserPresent.password);
         if(!isPassMatch){
             const error = createHttpError(401, "Invalid Credentials");
@@ -96,6 +87,23 @@ const login = async (req, res, next) => {
         next(error);
     }
 
+}
+
+const checkToken = async (req, res, next) => {
+    try {
+        const {isToken, email} = req.body
+        const validToken = await User.findOne({email})
+       
+        if(isToken !== validToken.token){
+           throw new Error('Token is not valid, please try again')
+        }
+        await User.findByIdAndUpdate(validToken._id, {
+            $set: {status: true}
+        })
+        return res.status(200).json({message: "Token successfully verified"})
+    } catch (error) {
+        next(error)
+    }
 }
 
 const getUsers = async (req, res, next) => {
@@ -153,4 +161,4 @@ const logout = async (req, res, next) => {
 
 
 
-module.exports = { register, login, getUserData, logout, updateUserData, deleteUserData, getUsers }
+module.exports = { register, login, getUserData, logout, updateUserData, deleteUserData, getUsers, checkToken }
