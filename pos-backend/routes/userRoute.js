@@ -1,5 +1,5 @@
 const express = require("express");
-const { register, login, getUserData, logout, updateUserData, deleteUserData } = require("../controllers/userController");
+const { register, login, getUserData, logout, updateUserData, deleteUserData, getUsers } = require("../controllers/userController");
 const { isVerifiedUser } = require("../middlewares/tokenVerification");
 const router = express.Router();
 
@@ -10,7 +10,7 @@ router.route("/login").post(login);
 router.route("/logout").post(isVerifiedUser, logout)
 router.route("/update").put(isVerifiedUser, updateUserData)
 router.route("/delete").delete(isVerifiedUser, deleteUserData)
-router.route("/getAll").get()
+router.route("/getAll").get(getUsers)
 
 router.route("/").get(isVerifiedUser , getUserData);
 

@@ -51,7 +51,7 @@ const CartInfo = () => {
                     size={20}
                   />
                 </div>
-                <p className="text-[#f5f5f5] text-md font-bold">₹{item.price}</p>
+                <p className="text-[#f5f5f5] text-md font-bold">{item.price}</p>
               </div>
             </div>
           );

@@ -20,7 +20,7 @@ const addTable = async (req, res, next) => {
     await newTable.save();
     res
       .status(201)
-      .json({ success: true, message: "Table added!", data: newTable });
+      .json(newTable);
   } catch (error) {
     next(error);
   }
@@ -32,7 +32,7 @@ const getTables = async (req, res, next) => {
       path: "currentOrder",
       select: "customerDetails"
     });
-    res.status(200).json({ success: true, data: tables });
+    res.status(200).json(tables);
   } catch (error) {
     next(error);
   }
@@ -45,7 +45,7 @@ const deleteTable = async (req, res, next) => {
       const error = createHttpError(404, "Table not found!");
       return next(error);
     }
-    res.status(200).json({ success: true, message: "Table deleted successfully" });
+    res.status(200).json("Table deleted successfully");
   } catch (error) {
     next(error);
   }
