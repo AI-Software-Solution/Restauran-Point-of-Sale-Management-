@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { login } from "../../https/index";
+import axios from "axios";
 import { enqueueSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
 
@@ -8,7 +9,7 @@ const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [isTokenRequired, setIsTokenRequired] = useState(false);
   const [token, setToken] = useState("");
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -18,26 +19,50 @@ const Login = () => {
     setToken(e.target.value);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    loginMutation.mutate(formData);
+  const clearAccessToken = () => {
+    document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   };
 
   const loginMutation = useMutation({
     mutationFn: (reqData) => login(reqData),
-    onSuccess: (res) => {
-      if (res.status === 200) {
-        if (res.data.status === false) {
-          setIsTokenRequired(true);
-        }else(
-          navigate("/")
-        )
+    onSuccess: async (res) => {
+      if (res.data.data.status === false) {
+        setIsTokenRequired(true);
+        clearAccessToken(); 
+      } else if (res.data.data.status === true) {
+        localStorage.setItem("authToken", res.data.data.token);
+        navigate("/");
       }
     },
     onError: (error) => {
-      enqueueSnackbar(error.response.data.message, { variant: "error" });
+      enqueueSnackbar(error.response?.data?.message || "Login failed", { variant: "error" });
     },
   });
+
+  const tokenMutation = useMutation({
+    mutationFn: async (reqData) => {
+      const response = await axios.put("http://localhost:4000/api/user/checkToken", { isToken: reqData.token, email: reqData.email });
+      return response.data;
+    },
+    onSuccess: (res) => {
+      if (res.status === 200) {
+        localStorage.setItem("authToken", res.data.token);
+        navigate("/");
+      }
+    },
+    onError: (error) => {
+      enqueueSnackbar(error.response?.data?.message || "Invalid token", { variant: "error" });
+    },
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isTokenRequired) {
+      tokenMutation.mutate({ email: formData.email, token });
+    } else {
+      loginMutation.mutate(formData);
+    }
+  };
 
   return (
     <div>
@@ -74,25 +99,28 @@ const Login = () => {
             />
           </div>
         </div>
-      {isTokenRequired && (
-        <div>
-          <label className="block text-[#ababab] mb-2 mt-3 text-sm font-medium">
-            Enter Verification Token
-          </label>
-          <div className="flex item-center rounded-lg p-5 px-4 bg-[#1f1f1f]">
-            <input
-              type="text"
-              value={token}
-              onChange={handleTokenChange}
-              placeholder="Enter token"
-              className="bg-transparent flex-1 text-white focus:outline-none"
-              required
-            />
+        {isTokenRequired && (
+          <div>
+            <label className="block text-[#ababab] mb-2 mt-3 text-sm font-medium">
+              Enter Verification Token
+            </label>
+            <div className="flex item-center rounded-lg p-5 px-4 bg-[#1f1f1f]">
+              <input
+                type="text"
+                value={token}
+                onChange={handleTokenChange}
+                placeholder="Enter token"
+                className="bg-transparent flex-1 text-white focus:outline-none"
+                required
+              />
+            </div>
           </div>
-        </div>
-      )}
-        <button type="submit" className="w-full rounded-lg mt-6 py-3 text-lg bg-yellow-400 text-gray-900 font-bold">
-          Sign in
+        )}
+        <button
+          type="submit"
+          className="w-full rounded-lg mt-6 py-3 text-lg bg-yellow-400 text-gray-900 font-bold"
+        >
+          {isTokenRequired ? "Verify Token" : "Sign in"}
         </button>
       </form>
     </div>
