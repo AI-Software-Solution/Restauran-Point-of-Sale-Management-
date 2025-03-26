@@ -1,22 +1,10 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import BottomNav from "../components/shared/BottomNav";
 import BackButton from "../components/shared/BackButton";
 import TableCard from "../components/tables/TableCard";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-
-// API dan table ma'lumotlarini olish
-const getTables = async () => {
-  try {
-    const response = await axios.get("http://localhost:4000/api/table");
-    console.log("Fetched Tables:", response.data);
-    return response.data; // JSON ma'lumotni qaytarish
-  } catch (error) {
-    console.error("Error fetching tables:", error);
-    return []; // Xatolik bo‘lsa, bo‘sh array qaytarish
-  }
-};
+import { getTables } from "../https/index"; // API chaqiriqlari uchun to‘g‘ri yo‘l
 
 const Tables = () => {
   const [status, setStatus] = useState("all");
@@ -36,7 +24,6 @@ const Tables = () => {
     console.error("Something went wrong while fetching tables!");
   }
 
-  // 📌 Filtrlangan ma'lumotlar
   const filteredTables =
     status === "all"
       ? resData
@@ -57,9 +44,7 @@ const Tables = () => {
             navigateMenu("/menu");
           }}
           className={`text-lg px-5 py-2 font-semibold ${
-            status === "takeaway"
-              ? "bg-yellow-500 text-black"
-              : "text-[#ababab]"
+            status === "takeaway" ? "bg-yellow-500 text-black" : "text-[#ababab]"
           } rounded-lg`}
         >
           Takeaway

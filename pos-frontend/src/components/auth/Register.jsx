@@ -23,7 +23,6 @@ const Register = ({setIsRegister}) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // ✅ Add validation before submitting
     const { name, email, phone, password, role } = formData;
     if (!name || !email || !phone || !password || !role) {
       enqueueSnackbar("All fields are required!", { variant: "error" });

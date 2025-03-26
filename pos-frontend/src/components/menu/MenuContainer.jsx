@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { FaShoppingCart } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { addItems } from "../../redux/slices/cartSlice";
+import { getCategories, getProducts } from "../../https/index"; // ✅ API chaqirish
 
 const MenuContainer = () => {
   const [products, setProducts] = useState([]); // Mahsulotlar
@@ -16,18 +16,15 @@ const MenuContainer = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/api/category");
-        console.log("Fetched Categories:", response.data);
+        const data = await getCategories(); // ✅ API chaqirish
 
-        if (Array.isArray(response.data)) {
-          setCategories(response.data);
-          setSelectedCategory(response.data[0] || null); // Birinchi kategoriyani tanlash
+        if (Array.isArray(data)) {
+          setCategories(data);
+          setSelectedCategory(data[0] || null); // Birinchi kategoriyani tanlash
         } else {
-          console.error("Error: Expected an array but got:", response.data);
           setCategories([]);
         }
       } catch (error) {
-        console.error("Error fetching categories:", error);
         setCategories([]);
       }
     };
@@ -39,17 +36,14 @@ const MenuContainer = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/api/product");
-        console.log("Fetched Products:", response.data);
+        const data = await getProducts(); // ✅ API chaqirish
 
-        if (Array.isArray(response.data)) {
-          setProducts(response.data);
+        if (Array.isArray(data)) {
+          setProducts(data);
         } else {
-          console.error("Error: Expected an array but got:", response.data);
           setProducts([]);
         }
       } catch (error) {
-        console.error("Error fetching products:", error);
         setProducts([]);
       }
     };
