@@ -7,19 +7,21 @@ const addProduct = async (req, res, next) => {
   try {
     const { name, price, category } = req.body;
 
-    const isCategoryAvailable = await Category.findById(category);
+    const isCategoryAvailable = await  Category.findOne({name: category})    
 
     if (!isCategoryAvailable) {
       const error = createHttpError(404, "There is no such category");
       return next(error);
     }
 
-    const newProduct = new Product({ name, price, category });
+    const newProduct = new Product({ name, price, category: isCategoryAvailable._id });
     await newProduct.save();
     res
       .status(201)
       .json(newProduct);
   } catch (error) {
+    console.log(error);
+    
     next(error.message);
   }
 };

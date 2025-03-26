@@ -47,7 +47,8 @@ const login = async (req, res, next) => {
 
     try {
         
-        const { email, password, token } = req.body;
+        const { email, password } = req.body;
+        
 
         if(!email || !password) {
             const error = createHttpError(400, "All fields are required!");
@@ -64,19 +65,20 @@ const login = async (req, res, next) => {
         if(!isPassMatch){
             const error = createHttpError(401, "Invalid Credentials");
             return next(error);
+        }        
+
+        if (isUserPresent.status === true) {
+            const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
+                expiresIn : '1d'
+            });
+
+            res.cookie('accessToken', accessToken, {
+                maxAge: 1000 * 60 * 60 *24 * 30,
+                httpOnly: true,
+                sameSite: 'none',
+                secure: true
+            })
         }
-         
-
-        const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
-            expiresIn : '1d'
-        });
-
-        res.cookie('accessToken', accessToken, {
-            maxAge: 1000 * 60 * 60 *24 * 30,
-            httpOnly: true,
-            sameSite: 'none',
-            secure: true
-        })
 
         res.status(200).json({success: true, message: "User login successfully!", 
             data: isUserPresent
@@ -92,14 +94,31 @@ const login = async (req, res, next) => {
 const checkToken = async (req, res, next) => {
     try {
         const {isToken, email} = req.body
-        const validToken = await User.findOne({email})
-       
+        const validToken = await User.findOne({email})        
+
         if(isToken !== validToken.token){
+            console.log(false);
            throw new Error('Token is not valid, please try again')
+            
         }
+
         await User.findByIdAndUpdate(validToken._id, {
             $set: {status: true}
         })
+
+        if (isUserPresent.status === true) {
+            const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
+                expiresIn : '1d'
+            });
+
+            res.cookie('accessToken', accessToken, {
+                maxAge: 1000 * 60 * 60 *24 * 30,
+                httpOnly: true,
+                sameSite: 'none',
+                secure: true
+            })
+        }
+
         return res.status(200).json({message: "Token successfully verified"})
     } catch (error) {
         next(error)

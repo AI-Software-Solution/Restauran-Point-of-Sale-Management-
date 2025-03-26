@@ -76,7 +76,7 @@ const SuperAdmin = () => {
                     )}
                   </td>
                   <td className="py-3 px-6 border border-[#383838]">
-                    {user.status}
+                    {`${user.status}`}
                   </td>
                 </tr>
               ))
