@@ -11,6 +11,7 @@ const statistics = async (req, res, next) => {
     const tables = await Table.find();
     const users = await User.find();
     const orders = await Order.find();
+    const inProgressCount = orders.filter(order => order.orderStatus === "In Progress").length;
     const revenue = orders.reduce((sum, order) => {
       return sum + (order.bills?.totalWithTax || 0);
     }, 0);
@@ -21,6 +22,7 @@ const statistics = async (req, res, next) => {
       totalUsers: users.length,
       totalOrders: orders.length,
       totalRevenue: revenue,
+      activeOrders: inProgressCount
     });
   } catch (error) {
     next(error)
