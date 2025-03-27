@@ -74,18 +74,29 @@ const updateCategory = async (req, res, next) => {
 };
 
 const deleteCategory = async (req, res, next) => {
-    const {id} = req.params
-    try {
-        const category = await Category.findByIdAndDelete(id)
-        if(!category){
-            const error = createHttpError(400, 'Category not found')
-            return error
-        }
-        res.status(200).json('Category deleted successfully')
+  const { id } = req.params;
+  try {
+      const category = await Category.findById(id);
+      if (!category) {
+          return next(createHttpError(400, "Category not found"));
+      }
 
-    } catch (error) {
-        
-    }
-}
+      const foods = await Product.find({ category: category._id });
+
+      if (foods.length > 0) {
+          await Promise.all(
+              foods.map((item) => Product.findByIdAndDelete(item._id))
+          );
+      }
+
+      await Category.findByIdAndDelete(id);
+
+      res.status(200).json({ message: "Category deleted successfully" });
+
+  } catch (error) {
+      next(error);
+  }
+};
+
 
 module.exports = { addCategory, getCategories, updateCategory, deleteCategory, getOneCategory };
