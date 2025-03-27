@@ -7,6 +7,7 @@ import Metrics from "../components/dashboard/Metrics";
 import RecentOrders from "../components/dashboard/RecentOrders";
 import Modal from "../components/dashboard/Modal";
 import { addCategory, addTable, addDish } from "../https/index"; // ✅ API chaqirish
+import { Controller } from "../components/dashboard/Controller";
 
 const buttons = [
   { label: "Add Table", icon: <MdTableBar />, action: "table" },
@@ -14,7 +15,7 @@ const buttons = [
   { label: "Add Dishes", icon: <BiSolidDish />, action: "dishes" },
 ];
 
-const tabs = ["Metrics", "Orders"];
+const tabs = ["Metrics", "Orders", "Controller"];
 
 const Dashboard = () => {
   useEffect(() => {
@@ -112,6 +113,7 @@ const Dashboard = () => {
 
       {activeTab === "Metrics" && <Metrics />}
       {activeTab === "Orders" && <RecentOrders />}
+      {activeTab === "Controller" && <Controller />}
 
       {/* Table qo'shish modal */}
       {isTableModalOpen && (
