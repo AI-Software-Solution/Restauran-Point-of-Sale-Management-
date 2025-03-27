@@ -6,6 +6,7 @@ import { enqueueSnackbar } from "notistack";
 import Metrics from "../components/dashboard/Metrics";
 import RecentOrders from "../components/dashboard/RecentOrders";
 import Modal from "../components/dashboard/Modal";
+import { addCategory, addTable, addDish } from "../https/index"; // ✅ API chaqirish
 
 const buttons = [
   { label: "Add Table", icon: <MdTableBar />, action: "table" },
@@ -13,7 +14,7 @@ const buttons = [
   { label: "Add Dishes", icon: <BiSolidDish />, action: "dishes" },
 ];
 
-const tabs = ["Metrics", "Orders", "Payments"];
+const tabs = ["Metrics", "Orders"];
 
 const Dashboard = () => {
   useEffect(() => {
@@ -25,7 +26,7 @@ const Dashboard = () => {
   const [isDishesModalOpen, setIsDishesModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Metrics");
 
-  // Kategoriyalarni olish
+  // 🔹 Kategoriyalarni olish
   const { data: categories = [], refetch: refetchCategories } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -35,26 +36,16 @@ const Dashboard = () => {
     },
   });
 
-  // Modal ochish funktsiyasi
+  // 🔹 Modal ochish funktsiyasi
   const handleOpenModal = (action) => {
     if (action === "table") setIsTableModalOpen(true);
     if (action === "category") setIsCategoryModalOpen(true);
     if (action === "dishes") setIsDishesModalOpen(true);
   };
 
+  // 🔹 Stol qo‘shish
   const addTableMutation = useMutation({
-    mutationFn: async (newTable) => {
-      const response = await fetch("http://localhost:4000/api/table", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tableNo: newTable.tableNumber, // <-- Backend uchun moslash
-          seats: newTable.seatNumber,    // <-- Backend uchun moslash
-        }),
-      });
-      if (!response.ok) throw new Error("Failed to add table");
-      return response.json();
-    },
+    mutationFn: addTable, // ✅ `https/index.js` dagi API
     onSuccess: () => {
       enqueueSnackbar("Table added successfully!", { variant: "success" });
       setIsTableModalOpen(false);
@@ -63,44 +54,23 @@ const Dashboard = () => {
       enqueueSnackbar(error.message, { variant: "error" });
     },
   });
-  
 
+  // 🔹 Kategoriya qo‘shish
   const addCategoryMutation = useMutation({
-    mutationFn: async (newCategory) => {
-      const response = await fetch("http://localhost:4000/api/category", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newCategory),
-      });
-      if (!response.ok) throw new Error("Failed to add category");
-      return response.json();
-    },
+    mutationFn: addCategory, // ✅ `https/index.js` dagi API
     onSuccess: () => {
       enqueueSnackbar("Category added successfully!", { variant: "success" });
       setIsCategoryModalOpen(false);
-      refetchCategories(); // Yangi kategoriyalarni olish
+      refetchCategories();
     },
     onError: (error) => {
       enqueueSnackbar(error.message, { variant: "error" });
     },
   });
 
-  // **Dish qo'shish funksiyasi**
+  // 🔹 Ovqat qo‘shish
   const addDishMutation = useMutation({
-    mutationFn: async (newDish) => {
-      const response = await fetch("http://localhost:4000/api/product", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newDish.name,
-          price: newDish.price,
-          category: newDish.category, // <-- Backend uchun ID jo‘natiladi
-        }),
-      });
-  
-      if (!response.ok) throw new Error("Failed to add dish");
-      return response.json();
-    },
+    mutationFn: addDish, // ✅ `https/index.js` dagi API
     onSuccess: () => {
       enqueueSnackbar("Dish added successfully!", { variant: "success" });
       setIsDishesModalOpen(false);
@@ -109,7 +79,6 @@ const Dashboard = () => {
       enqueueSnackbar(error.message, { variant: "error" });
     },
   });
-  
 
   return (
     <div className="bg-[#1f1f1f] h-[calc(100vh-5rem)]">
@@ -143,13 +112,8 @@ const Dashboard = () => {
 
       {activeTab === "Metrics" && <Metrics />}
       {activeTab === "Orders" && <RecentOrders />}
-      {activeTab === "Payments" && (
-        <div className="text-white p-6 container mx-auto">
-          Payment Component Coming Soon
-        </div>
-      )}
 
-      {/* Table qo'shish modal (tableNumber va seatNumber bilan) */}
+      {/* Table qo'shish modal */}
       {isTableModalOpen && (
         <Modal
           title="Add Table"
@@ -184,7 +148,7 @@ const Dashboard = () => {
               name: "category",
               label: "Category",
               type: "select",
-              options: categories.map((cat) => ({ label: cat.name, value: cat.id })),
+              options: categories.map((cat) => ({ label: cat.name, value: cat._id })),
             },
           ]}
           submitFunction={addDishMutation}

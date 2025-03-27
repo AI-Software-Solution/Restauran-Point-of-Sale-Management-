@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import BottomNav from "../components/shared/BottomNav";
 import { enqueueSnackbar } from "notistack";
+import { getAllUsers } from "../https/index"; // API chaqiriqlari uchun
 
 const SuperAdmin = () => {
   const [users, setUsers] = useState([]);
@@ -14,8 +15,7 @@ const SuperAdmin = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:4000/api/user/getAll");
-      const data = await response.json();
+      const data = await getAllUsers();
       setUsers(data);
     } catch (error) {
       enqueueSnackbar("Failed to fetch users", { variant: "error" });
@@ -47,10 +47,10 @@ const SuperAdmin = () => {
                   Loading users...
                 </td>
               </tr>
-            ) : users.length > 0 ? (
-              users.map((user) => (
+            ) : users && users.length > 0 ? (
+              users.map((user, index) => (
                 <tr
-                  key={user.id}
+                  key={user.id || index}
                   className="text-[#f5f5f5] text-center hover:bg-[#383838]"
                 >
                   <td className="py-3 px-6 border border-[#383838]">
@@ -75,9 +75,7 @@ const SuperAdmin = () => {
                       </button>
                     )}
                   </td>
-                  <td className="py-3 px-6 border border-[#383838]">
-                    {`${user.status}`}
-                  </td>
+                  <td className="py-3 px-6 border border-[#383838]">{`${user.status}`}</td>
                 </tr>
               ))
             ) : (

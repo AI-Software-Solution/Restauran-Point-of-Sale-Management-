@@ -1,34 +1,80 @@
 import { axiosWrapper } from "./axiosWrapper";
 
-// API Endpoints
-
-// Auth Endpoints
+// 🔹 Auth Endpoints
 export const login = (data) => axiosWrapper.post("/api/user/login", data);
 export const register = (data) => axiosWrapper.post("/api/user/register", data);
 export const getUserData = () => axiosWrapper.get("/api/user");
 export const logout = () => axiosWrapper.post("/api/user/logout");
+export const checkToken = (data) => axiosWrapper.put("/api/user/checkToken", data); // ✅ Token tekshirish API qo'shildi
+export const getAllUsers = async () => {
+  try {
+    const response = await axiosWrapper.get("/api/user/getAll");
+    return response.data; // ✅ API dan to‘g‘ri natija olish
+  } catch (error) {
+    throw error;
+  }
+};
 
-// Table Endpoints
-export const addTable = (data) => axiosWrapper.post("/api/table/", data);
+// 🔹 Category Endpoints ✅ Yangilandi
+export const getCategories = async () => {
+  try {
+    const response = await axiosWrapper.get("/api/category");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    throw error;
+  }
+};
+export const addCategory = async (newCategory) => {
+  const response = await axios.post(`${API_BASE_URL}/category`, newCategory);
+  return response.data;
+};
+
+// 🔹 Product Endpoints ✅ Qo‘shildi
+export const getProducts = async () => {
+  try {
+    const response = await axiosWrapper.get("/api/product");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    throw error;
+  }
+};
+export const addDish = async (newDish) => {
+  const response = await axios.post(`${API_BASE_URL}/product`, {
+    name: newDish.name,
+    price: newDish.price,
+    category: newDish.category, // <-- Backend uchun ID jo‘natiladi
+  });
+  return response.data;
+};
+
+// 🔹 Table Endpoints
+export const addTable = async (newTable) => {
+  const response = await axios.post(`${API_BASE_URL}/table`, {
+    tableNo: newTable.tableNumber,
+    seats: newTable.seatNumber,
+  });
+  return response.data;
+};
 export const getTables = async () => {
   try {
     const response = await axiosWrapper.get("/api/table");
-    return response.data; // API dan kelgan ma'lumotni qaytaramiz
+    return response.data;
   } catch (error) {
-    console.error("Error fetching tables:", error);
-    throw error; // Xatolikni qaytarib yuboramiz
+    throw error;
   }
 };
 export const updateTable = ({ tableId, ...tableData }) =>
   axiosWrapper.put(`/api/table/${tableId}`, tableData);
 
-// Payment Endpoints
+// 🔹 Payment Endpoints
 export const createOrderRazorpay = (data) =>
   axiosWrapper.post("/api/payment/create-order", data);
 export const verifyPaymentRazorpay = (data) =>
   axiosWrapper.post("/api/payment/verify-payment", data);
 
-// Order Endpoints
+// 🔹 Order Endpoints
 export const addOrder = (data) => axiosWrapper.post("/api/order/", data);
 export const getOrders = () => axiosWrapper.get("/api/order");
 export const updateOrderStatus = ({ orderId, orderStatus }) =>

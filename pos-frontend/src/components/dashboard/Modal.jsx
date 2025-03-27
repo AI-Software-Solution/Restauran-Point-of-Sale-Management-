@@ -16,7 +16,6 @@ const Modal = ({ title, closeModal, inputFields, submitFunction }) => {
   // Formani yuborish
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form Data:", formData); // <-- Jo‘natilayotgan ma’lumotlarni tekshirish
     submitFunction.mutate(formData);
   };
 
@@ -31,7 +30,10 @@ const Modal = ({ title, closeModal, inputFields, submitFunction }) => {
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-[#f5f5f5] text-xl font-semibold">{title}</h2>
-          <button onClick={closeModal} className="text-[#f5f5f5] hover:text-red-500">
+          <button
+            onClick={closeModal}
+            className="text-[#f5f5f5] hover:text-red-500"
+          >
             <IoMdClose size={24} />
           </button>
         </div>
@@ -51,9 +53,15 @@ const Modal = ({ title, closeModal, inputFields, submitFunction }) => {
                     className="bg-transparent flex-1 text-white focus:outline-none"
                     required
                   >
-                    <option value="">Select {field.label}</option>
+                    <option value="" className="text-white p-5 px-4 bg-[#1f1f1f]">
+                      Select {field.label}
+                    </option>
                     {field.options.map((option) => (
-                      <option key={option.value} value={option.value}>
+                      <option
+                        key={option.value}
+                        value={option.value}
+                        className="text-white p-5 px-4 bg-[#1f1f1f]"
+                      >
                         {option.label}
                       </option>
                     ))}

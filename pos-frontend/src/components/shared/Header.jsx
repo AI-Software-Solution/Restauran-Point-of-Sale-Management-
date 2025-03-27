@@ -1,5 +1,4 @@
 import React from "react";
-import { FaSearch } from "react-icons/fa";
 import { FaUserCircle } from "react-icons/fa";
 import { FaBell } from "react-icons/fa";
 import logo from "../../assets/images/logo.png";
@@ -19,7 +18,6 @@ const Header = () => {
   const logoutMutation = useMutation({
     mutationFn: () => logout(),
     onSuccess: (data) => {
-      console.log(data);
       dispatch(removeUser());
       navigate("/auth");
     },
@@ -40,16 +38,6 @@ const Header = () => {
         <h1 className="text-lg font-semibold text-[#f5f5f5] tracking-wide">
           Bobur Mirzo
         </h1>
-      </div>
-
-      {/* SEARCH */}
-      <div className="flex items-center gap-4 bg-[#1f1f1f] rounded-[15px] px-5 py-2 w-[500px]">
-        <FaSearch className="text-[#f5f5f5]" />
-        <input
-          type="text"
-          placeholder="Search"
-          className="bg-[#1f1f1f] outline-none text-[#f5f5f5]"
-        />
       </div>
 
       {/* LOGGED USER DETAILS */}

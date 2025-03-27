@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { login } from "../../https/index";
-import axios from "axios";
+import { login, checkToken } from "../../https/index"; // checkToken ham qo'shildi
 import { enqueueSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
 
@@ -26,9 +25,10 @@ const Login = () => {
   const loginMutation = useMutation({
     mutationFn: (reqData) => login(reqData),
     onSuccess: async (res) => {
+
       if (res.data.data.status === false) {
         setIsTokenRequired(true);
-        clearAccessToken(); 
+        clearAccessToken();
       } else if (res.data.data.status === true) {
         localStorage.setItem("authToken", res.data.data.token);
         navigate("/");
@@ -40,11 +40,10 @@ const Login = () => {
   });
 
   const tokenMutation = useMutation({
-    mutationFn: async (reqData) => {
-      const response = await axios.put("http://localhost:4000/api/user/checkToken", { isToken: reqData.token, email: reqData.email });
-      return response.data;
-    },
+    mutationFn: (reqData) => checkToken(reqData), // ✅ API chaqiruvi index.js dan olinmoqda
     onSuccess: (res) => {
+      console.log("Token verification response:", res.data);
+
       if (res.status === 200) {
         localStorage.setItem("authToken", res.data.token);
         navigate("/");
