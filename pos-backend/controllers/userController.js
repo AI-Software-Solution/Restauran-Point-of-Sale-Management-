@@ -60,17 +60,21 @@ const login = async (req, res, next) => {
             const error = createHttpError(401, "Invalid Credentials");
             return next(error);
         }
-
+        
         const isPassMatch = await bcrypt.compare(password, isUserPresent.password);
         if(!isPassMatch){
             const error = createHttpError(401, "Invalid Credentials");
             return next(error);
         }        
-
-        if (isUserPresent.status === true) {
+        
+        if (isUserPresent.status === false) {
             const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
                 expiresIn : '1d'
             });
+            
+            await User.findByIdAndUpdate(isUserPresent._id, {
+                $set: { status: true }
+            })
 
             res.cookie('accessToken', accessToken, {
                 maxAge: 1000 * 60 * 60 *24 * 30,
