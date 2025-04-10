@@ -77,7 +77,6 @@ const BottomNav = () => {
         <MdTableBar className="inline mr-2" size={20} /> <p>Tables</p>
       </button>
 
-      {isAdmin && (
         <button
           onClick={() => navigate("/admin_panel")}
           className={`flex items-center justify-center font-bold ${
@@ -88,7 +87,6 @@ const BottomNav = () => {
         >
           <MdTableBar className="inline mr-2" size={20} /> <p>Admin</p>
         </button>
-      )}
 
       <button
         disabled={isActive("/tables") || isActive("/menu")}

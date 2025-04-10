@@ -13,7 +13,7 @@ connectDB();
 // Middlewares
 app.use(cors({
     credentials: true,
-    origin: {credentials:true, origin: '*'}
+    origin: {credentials:true, origin: 'https://restaurant-system-manage.netlify.app/'}
 }))
 app.use(express.json()); 
 app.use(cookieParser())
