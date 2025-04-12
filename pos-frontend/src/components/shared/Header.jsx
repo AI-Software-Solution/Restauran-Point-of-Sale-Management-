@@ -63,9 +63,9 @@ const Header = () => {
               <MdDashboard className="text-[#f5f5f5] text-2xl" />
             </div>
           )}
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsModalOpen(true)}>
+          <div className="flex items-center gap-3 cursor-pointer">
             <FaUserCircle className="text-[#f5f5f5] text-4xl" />
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-start"  onClick={() => setIsModalOpen(true)}>
               <h1 className="text-md text-[#f5f5f5] font-semibold tracking-wide">
                 {userData.name || "TEST USER"}
               </h1>

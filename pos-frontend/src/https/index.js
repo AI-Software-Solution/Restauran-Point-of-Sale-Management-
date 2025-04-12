@@ -1,3 +1,4 @@
+import axios from "axios";
 import { axiosWrapper } from "./axiosWrapper";
 
 // 🔹 Auth Endpoints
