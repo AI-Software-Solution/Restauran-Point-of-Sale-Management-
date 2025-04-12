@@ -1,5 +1,6 @@
 import axios from "axios";
 import { axiosWrapper } from "./axiosWrapper";
+import.meta.env.VITE_BACKEND_URL
 
 // 🔹 Auth Endpoints
 export const login = (data) => axiosWrapper.post("/api/user/login", data);
@@ -29,7 +30,7 @@ export const getCategories = async () => {
   }
 };
 export const addCategory = async (newCategory) => {
-  const response = await axios.post(`${API_BASE_URL}/category`, newCategory);
+  const response = await axiosWrapper.post(`/api/category`, newCategory);
   return response.data;
 };
 export const deleteCategory = async (id) => axiosWrapper.delete(`/api/category/${id}`)
@@ -45,10 +46,12 @@ export const getProducts = async () => {
   }
 };
 export const addDish = async (newDish) => {
-  const response = await axios.post(`${API_BASE_URL}/product`, {
+  console.log(newDish.category);
+  
+  const response = await axiosWrapper.post(`/api/product`, {
     name: newDish.name,
     price: newDish.price,
-    category: newDish.category, // <-- Backend uchun ID jo‘natiladi
+    category: newDish.category, 
   });
   return response.data;
 };
@@ -56,7 +59,7 @@ export const deleteDish = async (id) => axiosWrapper.delete(`/api/product/${id}`
 
 // 🔹 Table Endpoints
 export const addTable = async (newTable) => {
-  const response = await axios.post(`${API_BASE_URL}/table`, {
+  const response = await axiosWrapper.post(`/api/table`, {
     tableNo: newTable.tableNumber,
     seats: newTable.seatNumber,
   });
