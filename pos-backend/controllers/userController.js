@@ -64,7 +64,7 @@ const login = async (req, res, next) => {
             return next(error);
         }        
         
-        if (isUserPresent.status === false) {
+        if (isUserPresent.status === true) {
             const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
                 expiresIn : '1d'
             });

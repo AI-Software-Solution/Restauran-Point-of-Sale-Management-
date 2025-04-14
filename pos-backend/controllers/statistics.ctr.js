@@ -17,7 +17,9 @@ const statistics = async (req, res, next) => {
     const orders = await Order.find();
 
     const now = dayjs();
+    
     const startOfToday = now.startOf('day');
+    
     const startOfWeek = now.startOf('week');
     const startOfMonth = now.startOf('month');
     const startOfYear = now.startOf('year');
@@ -31,6 +33,7 @@ const statistics = async (req, res, next) => {
 
     for (const order of orders) {
       const orderDate = dayjs(order.createdAt);
+      
       const amount = order.bills?.totalWithTax || 0;
 
       totalRevenue += amount;
