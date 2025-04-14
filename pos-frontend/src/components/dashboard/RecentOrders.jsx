@@ -38,7 +38,7 @@ const RecentOrders = () => {
       return await getOrders();
     },
     placeholderData: keepPreviousData,
-  });
+  });  
 
   if (isError) {
     enqueueSnackbar("Something went wrong!", { variant: "error" });
@@ -46,12 +46,10 @@ const RecentOrders = () => {
 
   // Status o'zgarganda ishlaydi
   const handleStatusChange = ({ orderId, orderStatus }) => {
-    orderStatusUpdateMutation.mutate({ orderId, orderStatus });
-
-    if (orderStatus === "Completed") {
-      setTimeout(() => {
-        deleteOrderMutation.mutate(orderId);
-      }, 2000); // ✅ 2 soniyadan keyin o‘chirish
+    if (orderStatus !== "Completed") {
+      orderStatusUpdateMutation.mutate({ orderId, orderStatus });
+    } else {
+      orderStatusUpdateMutation.mutate({ orderId, orderStatus });
     }
   };
 
@@ -75,40 +73,46 @@ const RecentOrders = () => {
             </tr>
           </thead>
           <tbody>
-            {resData?.data.data.map((order, index) => (
-              <tr key={index} className="border-b border-gray-600 hover:bg-[#333]">
-                <td className="p-4">#{Math.floor(new Date(order.orderDate).getTime())}</td>
-                <td className="p-4">{order.customerDetails.name}</td>
-                <td className="p-4">
-                  <select
-                    className={`bg-[#1a1a1a] text-[#f5f5f5] border border-gray-500 p-2 rounded-lg focus:outline-none ${
-                      order.orderStatus === "Ready"
-                        ? "text-green-500"
-                        : order.orderStatus === "Completed"
-                        ? "text-red-500"
-                        : "text-yellow-500"
-                    }`}
-                    value={order.orderStatus}
-                    onChange={(e) => handleStatusChange({ orderId: order._id, orderStatus: e.target.value })}
-                  >
-                    <option className="text-yellow-500" value="In Progress">
-                      In Progress
-                    </option>
-                    <option className="text-green-500" value="Ready">
-                      Ready
-                    </option>
-                    <option className="text-red-500" value="Completed">
-                      Completed
-                    </option>
-                  </select>
-                </td>
-                <td className="p-4">{formatDateAndTime(order.orderDate)}</td>
-                <td className="p-4">{order.items.length} Items</td>
-                <td className="p-4">Table - {order.table?.tableNo}</td>
-                <td className="p-4">{order.bills.totalWithTax}</td>
-                <td className="p-4">{order.paymentMethod}</td>
-              </tr>
-            ))}
+            {resData?.data.data
+              .filter((order) => order.orderStatus !== "Completed") // ⛔ "Completed" lar ko‘rinmaydi
+              .map((order, index) => (
+                <tr key={index} className="border-b border-gray-600 hover:bg-[#333]">
+                  <td className="p-4">#{Math.floor(new Date(order.orderDate).getTime())}</td>
+                  <td className="p-4">{order.customerDetails.name}</td>
+                  <td className="p-4">
+                    <select
+                      className={`bg-[#1a1a1a] text-[#f5f5f5] border border-gray-500 p-2 rounded-lg focus:outline-none ${order.orderStatus === "Ready"
+                          ? "text-green-500"
+                          : order.orderStatus === "Completed"
+                            ? "text-red-500"
+                            : "text-yellow-500"
+                        }`}
+                      value={order.orderStatus}
+                      onChange={(e) =>
+                        handleStatusChange({
+                          orderId: order._id,
+                          orderStatus: e.target.value,
+                        })
+                      }
+                    >
+                      <option className="text-yellow-500" value="In Progress">
+                        In Progress
+                      </option>
+                      <option className="text-green-500" value="Ready">
+                        Ready
+                      </option>
+                      <option className="text-red-500" value="Completed">
+                        Completed
+                      </option>
+                    </select>
+                  </td>
+                  <td className="p-4">{formatDateAndTime(order.orderDate)}</td>
+                  <td className="p-4">{order.items.length} Items</td>
+                  <td className="p-4">Table - {order.table?.tableNo}</td>
+                  <td className="p-4">{order.bills.totalWithTax}</td>
+                  <td className="p-4">{order.paymentMethod}</td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>

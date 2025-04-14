@@ -39,9 +39,13 @@ const Home = () => {
       {/* Left Div */}
       <div className="flex-[3]">
         <Greetings />
-        <div className="flex items-center w-full gap-3 px-8 mt-8">
-          <MiniCard title="Total Earnings" icon={<BsCashCoin />} number={statistics.totalRevenue} loading={loading} />
-          <MiniCard title="In Progress" icon={<GrInProgress />} number={statistics.activeOrders} loading={loading} />
+        <div className="flex items-stretch w-full gap-3 px-8 mt-8">
+          <div className="flex-1">
+            <MiniCard title="Total Earnings" icon={<BsCashCoin />} number={statistics.totalRevenue} loading={loading} />
+          </div>
+          <div className="flex-1">
+            <MiniCard title="In Progress" icon={<GrInProgress />} number={statistics.activeOrders} loading={loading} />
+          </div>
         </div>
         <RecentOrders />
       </div>

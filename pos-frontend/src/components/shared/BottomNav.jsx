@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaHome } from "react-icons/fa";
+import { FaHome, FaUsers } from "react-icons/fa";
 import { MdOutlineReorder, MdTableBar } from "react-icons/md";
 import { BiSolidDish } from "react-icons/bi";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -22,7 +22,7 @@ const BottomNav = () => {
     if (authToken) {
       try {
         const parsedToken = JSON.parse(atob(authToken.split(".")[1])); // JWT tokenni parse qilish
-        if (parsedToken.role === "Admin") {
+        if (parsedToken.role && parsedToken.role.toLowerCase() === "admin") {
           setIsAdmin(true);
         }
       } catch (error) {
@@ -54,25 +54,22 @@ const BottomNav = () => {
     <div className="fixed bottom-0 left-0 right-0 bg-[#262626] p-2 h-16 flex justify-around">
       <button
         onClick={() => navigate("/")}
-        className={`flex items-center justify-center font-bold ${
-          isActive("/") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
-        } w-[300px] rounded-[20px]`}
+        className={`flex items-center justify-center font-bold ${isActive("/") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
+          } w-[300px] rounded-[20px]`}
       >
         <FaHome className="inline mr-2" size={20} /> <p>Home</p>
       </button>
       <button
         onClick={() => navigate("/orders")}
-        className={`flex items-center justify-center font-bold ${
-          isActive("/orders") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
-        } w-[300px] rounded-[20px]`}
+        className={`flex items-center justify-center font-bold ${isActive("/orders") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
+          } w-[300px] rounded-[20px]`}
       >
         <MdOutlineReorder className="inline mr-2" size={20} /> <p>Orders</p>
       </button>
       <button
         onClick={() => navigate("/tables")}
-        className={`flex items-center justify-center font-bold ${
-          isActive("/tables") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
-        } w-[300px] rounded-[20px]`}
+        className={`flex items-center justify-center font-bold ${isActive("/tables") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
+          } w-[300px] rounded-[20px]`}
       >
         <MdTableBar className="inline mr-2" size={20} /> <p>Tables</p>
       </button>
@@ -80,13 +77,12 @@ const BottomNav = () => {
       {isAdmin && (
         <button
           onClick={() => navigate("/admin_panel")}
-          className={`flex items-center justify-center font-bold ${
-            isActive("/admin_panel")
+          className={`flex items-center justify-center font-bold ${isActive("/admin_panel")
               ? "text-[#f5f5f5] bg-[#343434]"
               : "text-[#ababab]"
-          } w-[300px] rounded-[20px]`}
+            } w-[300px] rounded-[20px]`}
         >
-          <MdTableBar className="inline mr-2" size={20} /> <p>Admin</p>
+          <FaUsers className="inline mr-2" size={20} /> <p>Admin</p>
         </button>
       )}
 

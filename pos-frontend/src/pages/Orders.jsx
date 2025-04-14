@@ -45,9 +45,8 @@ const Orders = () => {
             <button
               key={type}
               onClick={() => setStatus(type)}
-              className={`text-[#ababab] text-lg ${
-                status === type && "bg-[#383838] rounded-lg px-5 py-2"
-              }  rounded-lg px-5 py-2 font-semibold`}
+              className={`text-[#ababab] text-lg ${status === type && "bg-[#383838] rounded-lg px-5 py-2"
+                }  rounded-lg px-5 py-2 font-semibold`}
             >
               {type === "all" ? "All" : type === "progress" ? "In Progress" : "Ready"}
             </button>
@@ -56,8 +55,10 @@ const Orders = () => {
       </div>
 
       <div className="grid grid-cols-3 gap-3 px-16 py-4 overflow-y-scroll scrollbar-hide">
-        {filteredOrders?.length > 0 ? (
-          filteredOrders.map((order) => <OrderCard key={order._id} order={order} />)
+        {filteredOrders?.filter(order => order.status !== "Completed").length > 0 ? (
+          filteredOrders
+            .filter(order => order.orderStatus !== "Completed")
+            .map(order => <OrderCard key={order._id} order={order} />)
         ) : (
           <p className="col-span-3 text-gray-500">No orders available</p>
         )}
