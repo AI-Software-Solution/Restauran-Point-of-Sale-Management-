@@ -67,6 +67,7 @@ const deleteOrders = async (req, res, next) => {
   }
 };
 
+
 const updateOrder = async (req, res, next) => {
   try {
     const { orderStatus } = req.body;
@@ -88,6 +89,11 @@ const updateOrder = async (req, res, next) => {
       return next(error);
     }
 
+    if (orderStatus === "Completed") {
+      
+      await Table.findByIdAndUpdate(order.table, {status: "Available"})
+    }
+
     res
       .status(200)
       .json({ success: true, message: "Order updated", data: order });
@@ -95,5 +101,6 @@ const updateOrder = async (req, res, next) => {
     next(error);
   }
 };
+
 
 module.exports = { addOrder, getOrderById, getOrders, updateOrder, deleteOrders };

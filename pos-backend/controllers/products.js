@@ -7,7 +7,7 @@ const addProduct = async (req, res, next) => {
   try {
     const { name, price, category } = req.body;
 
-    const isCategoryAvailable = await  Category.findOne({name: category})    
+    const isCategoryAvailable = await  Category.findById(category)    
 
     if (!isCategoryAvailable) {
       const error = createHttpError(404, "There is no such category");

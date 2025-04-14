@@ -25,7 +25,7 @@ const register = async (req, res, next) => {
     
         const newUser = await User.create({name, phone, email, password, role})
         
-        const payload = { email: newUser.email, role: newUser.role };
+        const payload = { email: newUser.email, role: newUser.role, _id: newUser._id };
         const accessToken = jwt.sign(payload, config.accessTokenSecret, {expiresIn : '1d'});
         
         newUser.token = accessToken;
@@ -39,9 +39,6 @@ const register = async (req, res, next) => {
         next(error);
     }
 }
-
-
-
 
 const login = async (req, res, next) => {
 
@@ -60,18 +57,18 @@ const login = async (req, res, next) => {
             const error = createHttpError(401, "Invalid Credentials");
             return next(error);
         }
-
+        
         const isPassMatch = await bcrypt.compare(password, isUserPresent.password);
         if(!isPassMatch){
             const error = createHttpError(401, "Invalid Credentials");
             return next(error);
         }        
-
+        
         if (isUserPresent.status === true) {
             const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
                 expiresIn : '1d'
             });
-
+             
             res.cookie('accessToken', accessToken, {
                 maxAge: 1000 * 60 * 60 *24 * 30,
                 httpOnly: true,
@@ -79,48 +76,44 @@ const login = async (req, res, next) => {
                 secure: true
             })
         }
-
+        
         res.status(200).json({success: true, message: "User login successfully!", 
             data: isUserPresent
         });
-
-
+        
+        
     } catch (error) {
         next(error);
     }
-
+    
 }
 
 const checkToken = async (req, res, next) => {
     try {
-        const {isToken, email} = req.body
+        const {token, email} = req.body
         const validToken = await User.findOne({email})        
-
-        if(isToken !== validToken.token){
-            console.log(false);
-           throw new Error('Token is not valid, please try again')
-            
+        
+        if(token !== validToken.token){
+            console.log(token);
+           console.log(validToken.token);        
+            throw new Error('Token is not valid, please try again')   
         }
 
         await User.findByIdAndUpdate(validToken._id, {
-            $set: {status: true}
+            $set: { status: true }
         })
+   
 
-        if (isUserPresent.status === true) {
-            const accessToken = jwt.sign({_id: isUserPresent._id}, config.accessTokenSecret, {
-                expiresIn : '1d'
-            });
-
-            res.cookie('accessToken', accessToken, {
+            res.cookie('accessToken', token, {
                 maxAge: 1000 * 60 * 60 *24 * 30,
                 httpOnly: true,
                 sameSite: 'none',
                 secure: true
             })
+            
+            return res.status(200).json({message: "Token successfully verified"})
         }
-
-        return res.status(200).json({message: "Token successfully verified"})
-    } catch (error) {
+        catch (error) {
         next(error)
     }
 }
