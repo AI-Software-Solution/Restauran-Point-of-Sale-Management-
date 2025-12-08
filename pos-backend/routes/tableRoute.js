@@ -1,12 +1,13 @@
 const express = require("express");
-const { addTable, getTables, updateTable, avvaliableTable, deleteTable } = require("../controllers/tableController");
+const { addTable, getTables, updateTable, availableTable, deleteTable } = require("../controllers/tableController");
 const router = express.Router();
 const { isVerifiedUser } = require("../middlewares/tokenVerification")
- 
-router.route("/").post(addTable);
-router.route("/").get(getTables);
-router.route("/:id").put(updateTable);
-router.route("/available/:id").put(avvaliableTable)
-router.route("/:id").delete(deleteTable)
+
+// All routes require authentication
+router.route("/").get(isVerifiedUser, getTables);
+router.route("/").post(isVerifiedUser, addTable);
+router.route("/:id").put(isVerifiedUser, updateTable);
+router.route("/available/:id").put(isVerifiedUser, availableTable)
+router.route("/:id").delete(isVerifiedUser, deleteTable)
 
 module.exports = router;

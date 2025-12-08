@@ -1,8 +1,5 @@
-const Product = require("../models/productModel");
-const Category = require("../models/categoryModel");
-const Table = require("../models/tableModel");
-const Order = require("../models/orderModel");
-const User = require("../models/userModel");
+const { Product, Category, Table, Order, User } = require("../models");
+const { Op } = require('sequelize');
 
 const dayjs = require('dayjs');
 const isBetween = require('dayjs/plugin/isBetween');
@@ -10,113 +7,218 @@ const isSameOrAfter = require('dayjs/plugin/isSameOrAfter');
 dayjs.extend(isBetween);
 dayjs.extend(isSameOrAfter);
 
+// Maximum orders to process for statistics (to prevent memory issues)
+const MAX_ORDERS_FOR_STATS = 10000;
+
 const statistics = async (req, res, next) => {
-  try {
-    const categories = await Category.find();
-    const products = await Product.find();
-    const tables = await Table.find();
-    const users = await User.find();
-    const orders = await Order.find();
+    try {
+        const now = dayjs();
+        const startOfYear = now.startOf('year');
 
-    const now = dayjs();
+        // Get counts only (not full data) for overview stats
+        const [
+            categoriesCount,
+            productsCount,
+            tablesCount,
+            usersCount,
+            totalOrdersCount,
+            inProgressCount,
+            categories,
+            products
+        ] = await Promise.all([
+            Category.count(),
+            Product.count(),
+            Table.count(),
+            User.count(),
+            Order.count(),
+            Order.count({ where: { orderStatus: 'In Progress' } }),
+            Category.findAll({ attributes: ['id', 'name'] }),
+            Product.findAll({ attributes: ['id', 'name', 'price', 'categoryId'] })
+        ]);
 
-    const startOfToday = now.startOf('day');
-    const startOfWeek = now.startOf('week');
-    const startOfMonth = now.startOf('month');
-    const startOfYear = now.startOf('year');
+        // Only fetch orders from the current year for revenue calculations (with limit)
+        const orders = await Order.findAll({
+            where: {
+                createdAt: { [Op.gte]: startOfYear.toDate() }
+            },
+            attributes: ['id', 'createdAt', 'orderStatus', 'items', 'bills'],
+            order: [['createdAt', 'DESC']],
+            limit: MAX_ORDERS_FOR_STATS
+        });
 
-    let totalRevenue = 0;
-    let dailyRevenue = 0;
-    let weeklyRevenue = 0;
-    let monthlyRevenue = 0;
-    let yearlyRevenue = 0;
-    let inProgressCount = 0;
+        const startOfToday = now.startOf('day');
+        const startOfWeek = now.startOf('week');
+        const startOfMonth = now.startOf('month');
 
-    const dailyRevenueHistory = Array(6).fill(0);    // 4-hour chunks
-    const weeklyRevenueHistory = Array(7).fill(0);   // per day (Sun to Sat)
-    const monthlyRevenueHistory = Array(4).fill(0);  // 4 weeks
-    const yearlyRevenueHistory = Array(12).fill(0);  // Jan to Dec
+        let totalRevenue = 0;
+        let dailyRevenue = 0;
+        let weeklyRevenue = 0;
+        let monthlyRevenue = 0;
+        let yearlyRevenue = 0;
 
-    for (const order of orders) {
-      const orderDate = dayjs(order.createdAt);
-      const amount = order.bills?.totalWithTax || 0;
+        const dailyRevenueHistory = Array(6).fill(0);    // 4-hour chunks
+        const weeklyRevenueHistory = Array(7).fill(0);   // per day (Sun to Sat)
+        const monthlyRevenueHistory = Array(4).fill(0);  // 4 weeks
+        const yearlyRevenueHistory = Array(12).fill(0);  // Jan to Dec
 
-      totalRevenue += amount;
+        // Product sales tracking
+        const productSales = {}; // { productId: { name, quantity, revenue, categoryId } }
+        const categorySales = {}; // { categoryId: { name, revenue, orderCount } }
 
-      if (order.orderStatus === "In Progress") {
-        inProgressCount++;
-      }
+        // Initialize category sales
+        categories.forEach(cat => {
+            categorySales[cat.id] = {
+                name: cat.name,
+                revenue: 0,
+                orderCount: 0
+            };
+        });
 
-      // Time comparisons
-      if (orderDate.isSameOrAfter(startOfToday)) {
-        dailyRevenue += amount;
+        // Initialize product sales
+        products.forEach(product => {
+            productSales[product.id] = {
+                name: product.name,
+                quantity: 0,
+                revenue: 0,
+                categoryId: product.categoryId,
+                price: parseFloat(product.price) || 0
+            };
+        });
 
-        const hour = orderDate.hour();
-        const partIndex = Math.floor(hour / 4); // 0 to 5
-        dailyRevenueHistory[partIndex] += amount;
-      }
+        for (const order of orders) {
+            const orderDate = dayjs(order.createdAt);
+            // Fallback qo'shish - eski orderlar uchun turli formatlarni qo'llab-quvvatlash
+            const amount = order.bills?.totalWithTax
+                || order.bills?.total
+                || order.totalAmount
+                || (order.items || []).reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0)
+                || 0;
 
-      if (orderDate.isSameOrAfter(startOfWeek)) {
-        weeklyRevenue += amount;
+            totalRevenue += amount;
 
-        const weekday = orderDate.day(); // 0 = Sunday
-        weeklyRevenueHistory[weekday] += amount;
-      }
+            // Process order items for product/category stats
+            const items = order.items || [];
+            const itemCategoriesInOrder = new Set();
 
-      if (orderDate.isSameOrAfter(startOfMonth)) {
-        monthlyRevenue += amount;
+            items.forEach(item => {
+                const productId = item.id || item.productId;
+                const quantity = item.quantity || 1;
+                const itemPrice = item.price || 0;
+                const itemRevenue = itemPrice * quantity;
 
-        const dayOfMonth = orderDate.date(); // 1-based
-        const weekIndex = Math.floor((dayOfMonth - 1) / 7); // 0 to 3
-        monthlyRevenueHistory[Math.min(weekIndex, 3)] += amount;
-      }
+                if (productSales[productId]) {
+                    productSales[productId].quantity += quantity;
+                    productSales[productId].revenue += itemRevenue;
 
-      if (orderDate.isSameOrAfter(startOfYear)) {
-        yearlyRevenue += amount;
+                    const categoryId = productSales[productId].categoryId;
+                    if (categoryId && categorySales[categoryId]) {
+                        categorySales[categoryId].revenue += itemRevenue;
+                        itemCategoriesInOrder.add(categoryId);
+                    }
+                }
+            });
 
-        const monthIndex = orderDate.month(); // 0 = January
-        yearlyRevenueHistory[monthIndex] += amount;
-      }
+            // Count orders per category (one order can have multiple categories)
+            itemCategoriesInOrder.forEach(catId => {
+                if (categorySales[catId]) {
+                    categorySales[catId].orderCount += 1;
+                }
+            });
+
+            // Time comparisons
+            if (orderDate.isSameOrAfter(startOfToday)) {
+                dailyRevenue += amount;
+
+                const hour = orderDate.hour();
+                const partIndex = Math.floor(hour / 4); // 0 to 5
+                dailyRevenueHistory[partIndex] += amount;
+            }
+
+            if (orderDate.isSameOrAfter(startOfWeek)) {
+                weeklyRevenue += amount;
+
+                const weekday = orderDate.day(); // 0 = Sunday
+                weeklyRevenueHistory[weekday] += amount;
+            }
+
+            if (orderDate.isSameOrAfter(startOfMonth)) {
+                monthlyRevenue += amount;
+
+                const dayOfMonth = orderDate.date(); // 1-based
+                const weekIndex = Math.floor((dayOfMonth - 1) / 7); // 0 to 3
+                monthlyRevenueHistory[Math.min(weekIndex, 3)] += amount;
+            }
+
+            if (orderDate.isSameOrAfter(startOfYear)) {
+                yearlyRevenue += amount;
+
+                const monthIndex = orderDate.month(); // 0 = January
+                yearlyRevenueHistory[monthIndex] += amount;
+            }
+        }
+
+        // Get top products (sorted by quantity sold)
+        const topProducts = Object.values(productSales)
+            .filter(p => p.quantity > 0)
+            .sort((a, b) => b.quantity - a.quantity)
+            .slice(0, 5)
+            .map(p => ({
+                name: p.name,
+                quantity: p.quantity,
+                revenue: p.revenue
+            }));
+
+        // Get category stats (sorted by revenue)
+        const categoryStats = Object.values(categorySales)
+            .filter(c => c.revenue > 0)
+            .sort((a, b) => b.revenue - a.revenue)
+            .map(c => ({
+                name: c.name,
+                revenue: c.revenue,
+                orderCount: c.orderCount
+            }));
+
+        return res.status(200).json({
+            totalCategories: categoriesCount,
+            totalProducts: productsCount,
+            totalTable: tablesCount,
+            totalUsers: usersCount,
+            totalOrders: totalOrdersCount,
+            activeOrders: inProgressCount,
+            totalRevenue,
+
+            dailyRevenue,
+            dailyRevenueHistory,
+            dailyRevenueLabels: [
+                "00:00–04:00", "04:00–08:00", "08:00–12:00",
+                "12:00–16:00", "16:00–20:00", "20:00–00:00"
+            ],
+
+            weeklyRevenue,
+            weeklyRevenueHistory,
+            weeklyRevenueLabels: [
+                "Yakshanba", "Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba"
+            ],
+
+            monthlyRevenue,
+            monthlyRevenueHistory,
+            monthlyRevenueLabels: ["1-hafta", "2-hafta", "3-hafta", "4-hafta"],
+
+            yearlyRevenue,
+            yearlyRevenueHistory,
+            yearlyRevenueLabels: [
+                "Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun",
+                "Iyul", "Avgust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"
+            ],
+
+            // New data for charts
+            topProducts,
+            categoryStats
+        });
+
+    } catch (error) {
+        next(error);
     }
-
-    return res.status(200).json({
-      totalCategories: categories.length,
-      totalProducts: products.length,
-      totalTable: tables.length,
-      totalUsers: users.length,
-      totalOrders: orders.length,
-      activeOrders: inProgressCount,
-      totalRevenue,
-    
-      dailyRevenue,
-      dailyRevenueHistory,
-      dailyRevenueLabels: [
-        "00:00–04:00", "04:00–08:00", "08:00–12:00",
-        "12:00–16:00", "16:00–20:00", "20:00–00:00"
-      ],
-    
-      weeklyRevenue,
-      weeklyRevenueHistory,
-      weeklyRevenueLabels: [
-        "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
-      ],
-    
-      monthlyRevenue,
-      monthlyRevenueHistory,
-      monthlyRevenueLabels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-    
-      yearlyRevenue,
-      yearlyRevenueHistory,
-      yearlyRevenueLabels: [
-        "January", "February", "March", "April", "May", "June",
-        "July", "August", "September", "October", "November", "December"
-      ]
-    });
-    
-
-  } catch (error) {
-    next(error);
-  }
 };
 
 module.exports = statistics;

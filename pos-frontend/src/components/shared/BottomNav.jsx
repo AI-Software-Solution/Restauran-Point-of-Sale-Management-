@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { FaHome } from "react-icons/fa";
-import { MdOutlineReorder, MdTableBar } from "react-icons/md";
+import { MdOutlineReorder, MdTableBar, MdRestaurant, MdTakeoutDining, MdAdminPanelSettings } from "react-icons/md";
 import { BiSolidDish } from "react-icons/bi";
 import { useNavigate, useLocation } from "react-router-dom";
 import Modal from "./Modal";
 import { useDispatch } from "react-redux";
-import { setCustomer } from "../../redux/slices/customerSlice";
+import { setCustomer, setOrderType } from "../../redux/slices/customerSlice";
 
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [guestCount, setGuestCount] = useState(0);
-  const [name, setName] = useState("");
+
+  // Modal states
+  const [orderTypeModalOpen, setOrderTypeModalOpen] = useState(false);
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -21,135 +22,164 @@ const BottomNav = () => {
     const authToken = localStorage.getItem("authToken");
     if (authToken) {
       try {
-        const parsedToken = JSON.parse(atob(authToken.split(".")[1])); // JWT tokenni parse qilish
+        const parsedToken = JSON.parse(atob(authToken.split(".")[1]));
         if (parsedToken.role === "Admin") {
           setIsAdmin(true);
         }
-      } catch (error) {
-        console.error("Invalid token format");
+      } catch {
+        // Invalid token format - ignore
       }
     }
-  }, []); // Faqat bir marta ishlaydi
+  }, []);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
-
-  const increment = () => {
-    if (guestCount >= 6) return;
-    setGuestCount((prev) => prev + 1);
-  };
-  const decrement = () => {
-    if (guestCount <= 0) return;
-    setGuestCount((prev) => prev - 1);
+  const openOrderTypeModal = () => setOrderTypeModalOpen(true);
+  const closeOrderTypeModal = () => setOrderTypeModalOpen(false);
+  const closePhoneModal = () => {
+    setPhoneModalOpen(false);
+    setPhone("");
   };
 
   const isActive = (path) => location.pathname === path;
 
-  const handleCreateOrder = () => {
-    dispatch(setCustomer({ name, phone, guests: guestCount }));
+  // Dine-in tanlanganda
+  const handleDineIn = () => {
+    dispatch(setOrderType("dine-in"));
+    closeOrderTypeModal();
     navigate("/tables");
   };
 
+  // Olib ketish tanlanganda - telefon so'rash
+  const handleTakeawaySelect = () => {
+    closeOrderTypeModal();
+    setPhoneModalOpen(true);
+  };
+
+  // Telefon kiritilgandan keyin
+  const handleTakeawayConfirm = () => {
+    dispatch(setCustomer({ phone, orderType: "takeaway" }));
+    closePhoneModal();
+    navigate("/menu");
+  };
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#262626] p-2 h-16 flex justify-around">
+    <div className="fixed bottom-0 left-0 right-0 bg-[#262626] p-1 sm:p-2 h-14 sm:h-16 flex justify-around gap-1">
       <button
-        onClick={() => navigate("/")}
-        className={`flex items-center justify-center font-bold ${
-          isActive("/") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
-        } w-[300px] rounded-[20px]`}
+        onClick={() => navigate("/home")}
+        className={`flex items-center justify-center font-bold text-xs sm:text-base ${
+          isActive("/home") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
+        } flex-1 max-w-[200px] sm:max-w-[300px] rounded-[15px] sm:rounded-[20px] px-2 sm:px-4`}
       >
-        <FaHome className="inline mr-2" size={20} /> <p>Home</p>
+        <FaHome className="inline mr-1 sm:mr-2" size={18} /> <p className="hidden sm:inline">Home</p>
       </button>
       <button
         onClick={() => navigate("/orders")}
-        className={`flex items-center justify-center font-bold ${
+        className={`flex items-center justify-center font-bold text-xs sm:text-base ${
           isActive("/orders") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
-        } w-[300px] rounded-[20px]`}
+        } flex-1 max-w-[200px] sm:max-w-[300px] rounded-[15px] sm:rounded-[20px] px-2 sm:px-4`}
       >
-        <MdOutlineReorder className="inline mr-2" size={20} /> <p>Orders</p>
+        <MdOutlineReorder className="inline mr-1 sm:mr-2" size={18} /> <p className="hidden sm:inline">Orders</p>
       </button>
       <button
         onClick={() => navigate("/tables")}
-        className={`flex items-center justify-center font-bold ${
+        className={`flex items-center justify-center font-bold text-xs sm:text-base ${
           isActive("/tables") ? "text-[#f5f5f5] bg-[#343434]" : "text-[#ababab]"
-        } w-[300px] rounded-[20px]`}
+        } flex-1 max-w-[200px] sm:max-w-[300px] rounded-[15px] sm:rounded-[20px] px-2 sm:px-4`}
       >
-        <MdTableBar className="inline mr-2" size={20} /> <p>Tables</p>
+        <MdTableBar className="inline mr-1 sm:mr-2" size={18} /> <p className="hidden sm:inline">Tables</p>
       </button>
-
-        <button
-          onClick={() => navigate("/admin_panel")}
-          className={`flex items-center justify-center font-bold ${
-            isActive("/admin_panel")
-              ? "text-[#f5f5f5] bg-[#343434]"
-              : "text-[#ababab]"
-          } w-[300px] rounded-[20px]`}
-        >
-          <MdTableBar className="inline mr-2" size={20} /> <p>Admin</p>
-        </button>
 
       <button
-        disabled={isActive("/tables") || isActive("/menu")}
-        onClick={openModal}
-        className="absolute bottom-20 left-6 bg-[#F6B100] text-[#f5f5f5] rounded-full p-4 flex items-center"
+        onClick={() => navigate("/admin-pro")}
+        className={`flex items-center justify-center font-bold text-xs sm:text-base ${
+          isActive("/admin-pro")
+            ? "text-[#f5f5f5] bg-[#343434]"
+            : "text-[#ababab]"
+        } flex-1 max-w-[200px] sm:max-w-[300px] rounded-[15px] sm:rounded-[20px] px-2 sm:px-4`}
       >
-        <BiSolidDish size={40} />
+        <MdAdminPanelSettings className="inline mr-1 sm:mr-2" size={18} /> <p className="hidden sm:inline">Admin</p>
       </button>
 
-      <Modal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        title="Create Order"
-        className="absolute right-10 bottom-20"
+      {/* New Order Button */}
+      <button
+        disabled={isActive("/tables") || isActive("/menu")}
+        onClick={openOrderTypeModal}
+        className="absolute bottom-16 sm:bottom-20 left-3 sm:left-6 bg-[#F6B100] text-[#f5f5f5] rounded-full p-3 sm:p-4 flex items-center hover:bg-yellow-600 transition-colors disabled:opacity-50 shadow-lg"
       >
+        <BiSolidDish size={30} className="sm:w-10 sm:h-10" />
+      </button>
+
+      {/* Order Type Selection Modal */}
+      <Modal
+        isOpen={orderTypeModalOpen}
+        onClose={closeOrderTypeModal}
+        title="Buyurtma turi"
+      >
+        <p className="text-[#ababab] text-sm mb-4 text-center">
+          Buyurtma turini tanlang
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          {/* Dine-in Button */}
+          <button
+            onClick={handleDineIn}
+            className="flex-1 bg-[#1f1f1f] hover:bg-[#2a2a2a] border-2 border-transparent hover:border-[#F6B100] rounded-xl p-4 sm:p-6 flex flex-col items-center gap-2 sm:gap-3 transition-all"
+          >
+            <MdRestaurant className="text-[#F6B100]" size={36} />
+            <span className="text-white font-semibold text-base sm:text-lg">Dine-in</span>
+            <span className="text-[#ababab] text-xs">Stolda ovqatlanish</span>
+          </button>
+
+          {/* Takeaway Button */}
+          <button
+            onClick={handleTakeawaySelect}
+            className="flex-1 bg-[#1f1f1f] hover:bg-[#2a2a2a] border-2 border-transparent hover:border-[#F6B100] rounded-xl p-4 sm:p-6 flex flex-col items-center gap-2 sm:gap-3 transition-all"
+          >
+            <MdTakeoutDining className="text-[#22c55e]" size={36} />
+            <span className="text-white font-semibold text-base sm:text-lg">Olib ketish</span>
+            <span className="text-[#ababab] text-xs">Takeaway</span>
+          </button>
+        </div>
+      </Modal>
+
+      {/* Phone Number Modal (for Takeaway) */}
+      <Modal
+        isOpen={phoneModalOpen}
+        onClose={closePhoneModal}
+        title="Olib ketish - Telefon"
+      >
+        <p className="text-[#ababab] text-sm mb-4">
+          Buyurtmani olish uchun telefon raqamingizni kiriting
+        </p>
         <div>
           <label className="block text-[#ababab] mb-2 text-sm font-medium">
-            Customer Name
+            Telefon raqami
           </label>
           <div className="flex items-center rounded-lg p-3 px-4 bg-[#1f1f1f]">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              type="text"
-              placeholder="Enter customer name"
-              className="bg-transparent flex-1 text-white focus:outline-none"
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-[#ababab] mb-2 mt-3 text-sm font-medium">
-            Customer Phone
-          </label>
-          <div className="flex items-center rounded-lg p-3 px-4 bg-[#1f1f1f]">
+            <span className="text-[#ababab] mr-2">+998</span>
             <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              type="number"
-              placeholder="+91-9999999999"
+              type="tel"
+              placeholder="90 123 45 67"
               className="bg-transparent flex-1 text-white focus:outline-none"
+              autoFocus
             />
           </div>
         </div>
-        <div>
-          <label className="block mb-2 mt-3 text-sm font-medium text-[#ababab]">
-            Guest
-          </label>
-          <div className="flex items-center justify-between bg-[#1f1f1f] px-4 py-3 rounded-lg">
-            <button onClick={decrement} className="text-yellow-500 text-2xl">
-              &minus;
-            </button>
-            <span className="text-white">{guestCount} Person</span>
-            <button onClick={increment} className="text-yellow-500 text-2xl">
-              &#43;
-            </button>
-          </div>
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={closePhoneModal}
+            className="flex-1 bg-[#3a3a3a] text-[#f5f5f5] rounded-lg py-3 hover:bg-[#4a4a4a]"
+          >
+            Bekor qilish
+          </button>
+          <button
+            onClick={handleTakeawayConfirm}
+            disabled={!phone || phone.length < 9}
+            className="flex-1 bg-[#F6B100] text-[#f5f5f5] rounded-lg py-3 hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Davom etish
+          </button>
         </div>
-        <button
-          onClick={handleCreateOrder}
-          className="w-full bg-[#F6B100] text-[#f5f5f5] rounded-lg py-3 mt-8 hover:bg-yellow-700"
-        >
-          Create Order
-        </button>
       </Modal>
     </div>
   );

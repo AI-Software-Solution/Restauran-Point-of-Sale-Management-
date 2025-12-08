@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { login, checkToken } from "../../https/index"; // checkToken ham qo'shildi
 import { enqueueSnackbar } from "notistack";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ const Login = () => {
   const [isTokenRequired, setIsTokenRequired] = useState(false);
   const [token, setToken] = useState("");
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -25,13 +26,20 @@ const Login = () => {
   const loginMutation = useMutation({
     mutationFn: (reqData) => login(reqData),
     onSuccess: async (res) => {
+      // Backend returns accessToken at res.data.accessToken
+      if (res.data.accessToken) {
+        localStorage.setItem("authToken", res.data.accessToken);
 
-      if (res.data.data.status === false) {
+        // MUHIM: Barcha React Query cache ni tozalash
+        // Bu 304 Not Modified muammosini hal qiladi
+        queryClient.clear();
+
+        enqueueSnackbar("Login successful!", { variant: "success" });
+        navigate("/home");
+      } else {
+        // If no token, might need 2FA verification
         setIsTokenRequired(true);
         clearAccessToken();
-      } else if (res.data.data.status === true) {
-        localStorage.setItem("authToken", res.data.data.token);
-        navigate("/");
       }
     },
     onError: (error) => {
@@ -42,8 +50,6 @@ const Login = () => {
   const tokenMutation = useMutation({
     mutationFn: (reqData) => checkToken(reqData), // ✅ API chaqiruvi index.js dan olinmoqda
     onSuccess: (res) => {
-      console.log("Token verification response:", res.data);
-
       if (res.status === 200) {
         localStorage.setItem("authToken", res.data.token);
         navigate("/");

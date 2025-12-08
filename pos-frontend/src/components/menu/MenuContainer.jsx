@@ -1,24 +1,31 @@
-import React, { useState, useEffect } from "react";
-import { FaShoppingCart } from "react-icons/fa";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { FaShoppingCart, FaPlus } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import { addItems } from "../../redux/slices/cartSlice";
-import { getCategories, getProducts } from "../../https/index"; // ✅ API chaqirish
+import { getCategories, getProducts } from "../../https/index";
+
+// Unique ID generator
+let cartIdCounter = 0;
+const generateCartId = () => `cart-${Date.now()}-${++cartIdCounter}`;
 
 const MenuContainer = () => {
-  const [products, setProducts] = useState([]); // Mahsulotlar
-  const [categories, setCategories] = useState([]); // Kategoriyalar
-  const [selectedCategory, setSelectedCategory] = useState(null); // Tanlangan kategoriya
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [itemCount, setItemCount] = useState(0);
   const [itemId, setItemId] = useState();
+  const [addedItems, setAddedItems] = useState({}); // Quick-add animation tracking
   const dispatch = useDispatch();
 
   // 🔹 Kategoriyalarni API dan olish
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await getCategories(); // ✅ API chaqirish
+        const response = await getCategories(); // ✅ API chaqirish
+        // Handle both { data: [...] } and direct array responses
+        const data = response?.data || response || [];
 
-        if (Array.isArray(data)) {
+        if (Array.isArray(data) && data.length > 0) {
           setCategories(data);
           setSelectedCategory(data[0] || null); // Birinchi kategoriyani tanlash
         } else {
@@ -36,7 +43,9 @@ const MenuContainer = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const data = await getProducts(); // ✅ API chaqirish
+        const response = await getProducts(); // ✅ API chaqirish
+        // Handle both { data: [...] } and direct array responses
+        const data = response?.data || response || [];
 
         if (Array.isArray(data)) {
           setProducts(data);
@@ -51,24 +60,33 @@ const MenuContainer = () => {
     fetchProducts();
   }, []);
 
-  const increment = (id) => {
-    setItemId(id);
-    if (itemCount >= 4) return;
-    setItemCount((prev) => prev + 1);
-  };
+  // Memoized: Tanlangan kategoriya bo'yicha filtrlangan mahsulotlar
+  const filteredProducts = useMemo(() => {
+    if (!selectedCategory) return [];
+    // Support both id and _id, categoryId and category field names
+    const categoryId = selectedCategory?.id || selectedCategory?._id;
+    return products.filter((product) => {
+      const productCategoryId = product.categoryId || product.category;
+      return productCategoryId === categoryId;
+    });
+  }, [products, selectedCategory]);
 
-  const decrement = (id) => {
+  const increment = useCallback((id) => {
     setItemId(id);
-    if (itemCount <= 0) return;
-    setItemCount((prev) => prev - 1);
-  };
+    setItemCount((prev) => prev >= 4 ? prev : prev + 1);
+  }, []);
 
-  const handleAddToCart = (item) => {
+  const decrement = useCallback((id) => {
+    setItemId(id);
+    setItemCount((prev) => prev <= 0 ? prev : prev - 1);
+  }, []);
+
+  const handleAddToCart = useCallback((item) => {
     if (itemCount === 0) return;
 
     const { name, price } = item;
     const newObj = {
-      id: new Date(),
+      id: generateCartId(), // Unique ID
       name,
       pricePerQuantity: price,
       quantity: itemCount,
@@ -77,84 +95,142 @@ const MenuContainer = () => {
 
     dispatch(addItems(newObj));
     setItemCount(0);
-  };
+  }, [dispatch, itemCount]);
+
+  // Quick-add: 1 dona darhol qo'shish
+  const handleQuickAdd = useCallback((item, e) => {
+    e.stopPropagation();
+
+    const { name, price } = item;
+    const newObj = {
+      id: generateCartId(), // Unique ID
+      name,
+      pricePerQuantity: price,
+      quantity: 1,
+      price: price,
+    };
+
+    dispatch(addItems(newObj));
+
+    // Animation feedback
+    const itemId = item.id || item._id;
+    setAddedItems(prev => ({ ...prev, [itemId]: true }));
+    setTimeout(() => {
+      setAddedItems(prev => ({ ...prev, [itemId]: false }));
+    }, 300);
+  }, [dispatch]);
 
   return (
     <>
       {/* 🔹 Kategoriya tanlash */}
-      <div className="grid grid-cols-4 gap-4 px-10 py-4 w-[100%]">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4 px-4 sm:px-6 lg:px-10 py-4 w-full">
         {categories.length > 0 ? (
-          categories.map((category) => (
-            <div
-              key={category._id}
-              className={`flex flex-col items-start justify-between p-4 rounded-lg h-[100px] cursor-pointer ${
-                selectedCategory?._id === category._id ? "bg-[#025cca]" : "bg-[#1a1a1a]"
-              }`}
-              onClick={() => {
-                setSelectedCategory(category);
-                setItemId(0);
-                setItemCount(0);
-              }}
-            >
-              <h1 className="text-[#f5f5f5] text-lg font-semibold">
-                {category.name}
-              </h1>
-            </div>
-          ))
+          categories.map((category) => {
+            const catId = category.id || category._id;
+            const selectedId = selectedCategory?.id || selectedCategory?._id;
+            return (
+              <div
+                key={catId}
+                className={`flex flex-col items-start justify-between p-3 sm:p-4 rounded-lg h-[70px] sm:h-[100px] cursor-pointer ${
+                  selectedId === catId ? "bg-[#025cca]" : "bg-[#1a1a1a]"
+                }`}
+                onClick={() => {
+                  setSelectedCategory(category);
+                  setItemId(0);
+                  setItemCount(0);
+                }}
+              >
+                <h1 className="text-[#f5f5f5] text-sm sm:text-lg font-semibold">
+                  {category.name}
+                </h1>
+              </div>
+            );
+          })
         ) : (
-          <p className="text-white text-center col-span-4">No categories found</p>
+          <p className="text-white text-center col-span-full">No categories found</p>
         )}
       </div>
 
       <hr className="border-[#2a2a2a] border-t-2 mt-4" />
 
-      {/* 🔹 Tanlangan kategoriya bo‘yicha mahsulotlar */}
-      <div className="grid grid-cols-4 gap-4 px-10 py-4 w-[100%]">
-        {products.length > 0 ? (
-          products
-            .filter((product) => product.category === selectedCategory?._id) // 🔹 To‘g‘rilangan filter
-            .map((product) => (
+      {/* 🔹 Tanlangan kategoriya bo'yicha mahsulotlar */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4 px-4 sm:px-6 lg:px-10 py-4 w-full overflow-y-auto max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-320px)]">
+        {filteredProducts.length > 0 ? (
+          filteredProducts.map((product) => {
+            const prodId = product.id || product._id;
+            return (
               <div
-                key={product._id}
-                className="flex flex-col items-start justify-between p-4 rounded-lg h-[150px] cursor-pointer hover:bg-[#2a2a2a] bg-[#1a1a1a]"
+                key={prodId}
+                className={`relative flex flex-col items-start justify-between p-3 sm:p-4 rounded-lg h-[120px] sm:h-[150px] cursor-pointer transition-all duration-150 ${
+                  addedItems[prodId]
+                    ? "bg-[#2e4a40] scale-95"
+                    : "hover:bg-[#2a2a2a] bg-[#1a1a1a]"
+                }`}
               >
-                <div className="flex items-start justify-between w-full">
-                  <h1 className="text-[#f5f5f5] text-lg font-semibold">
-                    {product.name}
-                  </h1>
-                  <button
-                    onClick={() => handleAddToCart(product)}
-                    className="bg-[#2e4a40] text-[#02ca3a] p-2 rounded-lg"
-                  >
-                    <FaShoppingCart size={20} />
-                  </button>
-                </div>
+                {/* Quick Add Button - katta va ko'zga tashlanadigan */}
+                <button
+                  onClick={(e) => handleQuickAdd(product, e)}
+                  className="absolute top-2 right-2 bg-[#F6B100] hover:bg-yellow-600 text-[#1a1a1a] w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition-all hover:scale-110 active:scale-95 shadow-lg"
+                  title="Tez qo'shish (+1)"
+                >
+                  <FaPlus size={16} />
+                </button>
+
+                {/* Mahsulot nomi */}
+                <h1 className="text-[#f5f5f5] text-sm sm:text-lg font-semibold pr-10 sm:pr-12 line-clamp-2">
+                  {product.name}
+                </h1>
+
+                {/* Narx va miqdor kontroli */}
                 <div className="flex items-center justify-between w-full">
-                  <p className="text-[#f5f5f5] text-xl font-bold">
-                    UZS {product.price}
+                  <p className="text-[#F6B100] text-base sm:text-xl font-bold">
+                    {Number(product.price).toLocaleString()} <span className="text-xs sm:text-sm text-[#ababab]">UZS</span>
                   </p>
-                  <div className="flex items-center justify-between bg-[#1f1f1f] px-4 py-3 rounded-lg gap-6 w-[50%]">
+
+                  {/* Miqdor kontroli - faqat tanlanganda ko'rinadi */}
+                  {itemId === prodId && itemCount > 0 ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center bg-[#1f1f1f] rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => decrement(prodId)}
+                          className="text-yellow-500 text-xl px-3 py-2 hover:bg-[#2a2a2a]"
+                        >
+                          &minus;
+                        </button>
+                        <span className="text-white px-3 min-w-[30px] text-center">
+                          {itemCount}
+                        </span>
+                        <button
+                          onClick={() => increment(prodId)}
+                          className="text-yellow-500 text-xl px-3 py-2 hover:bg-[#2a2a2a]"
+                        >
+                          &#43;
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => handleAddToCart(product)}
+                        className="bg-[#2e4a40] hover:bg-[#3a5a50] text-[#02ca3a] p-2 rounded-lg transition-colors"
+                      >
+                        <FaShoppingCart size={18} />
+                      </button>
+                    </div>
+                  ) : (
                     <button
-                      onClick={() => decrement(product._id)}
-                      className="text-yellow-500 text-2xl"
+                      onClick={() => {
+                        setItemId(prodId);
+                        setItemCount(1);
+                      }}
+                      className="text-[#ababab] hover:text-white text-sm px-3 py-1 rounded bg-[#2a2a2a] hover:bg-[#3a3a3a] transition-colors"
                     >
-                      &minus;
+                      Ko'proq
                     </button>
-                    <span className="text-white">
-                      {itemId === product._id ? itemCount : "0"}
-                    </span>
-                    <button
-                      onClick={() => increment(product._id)}
-                      className="text-yellow-500 text-2xl"
-                    >
-                      &#43;
-                    </button>
-                  </div>
+                  )}
                 </div>
               </div>
-            ))
+            );
+          })
         ) : (
-          <p className="text-white text-center col-span-4">No products found</p>
+          <p className="text-white text-center col-span-full">Mahsulotlar topilmadi</p>
         )}
       </div>
     </>

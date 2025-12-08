@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pos-frontend
+  namespace: pos-system
+  labels:
+    app: pos-frontend
+spec:
+  selector:
+    app: pos-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+  type: ClusterIP

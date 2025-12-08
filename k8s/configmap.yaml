@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pos-config
+  namespace: pos-system
+data:
+  NODE_ENV: "production"
+  PORT: "4000"
+  DB_HOST: "pos-postgres"
+  DB_PORT: "5432"
+  DB_NAME: "pos_db"
+  DB_USER: "postgres"
+  ALLOWED_ORIGINS: "https://boburmirzo.myrestauran.uz"

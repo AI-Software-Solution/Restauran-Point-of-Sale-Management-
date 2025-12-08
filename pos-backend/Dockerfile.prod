@@ -1,0 +1,21 @@
+FROM node:20-slim
+WORKDIR /app
+
+# Non-root user for security
+RUN groupadd -g 1001 nodejs && \
+    useradd -r -u 1001 -g nodejs nodejs
+
+# Production dependencies only
+COPY package*.json ./
+RUN npm install --omit=dev --legacy-peer-deps
+
+COPY . .
+
+# Create logs directory and set ownership
+RUN mkdir -p logs && \
+    chown -R nodejs:nodejs /app
+
+USER nodejs
+
+EXPOSE 4000
+CMD ["node", "app.js"]
