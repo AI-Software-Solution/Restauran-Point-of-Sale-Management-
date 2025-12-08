@@ -65,8 +65,8 @@ Tizimni sinab ko'rish uchun:
 | | |
 |---|---|
 | **URL** | https://boburmirzo.myrestauran.uz |
-| **Admin** | admin@pos.local / Admin123! |
-| **Kassir** | cashier@pos.local / Cashier123! |
+| **Admin** | |
+| **Kassir** | |
 
 ---
 
@@ -90,3 +90,4 @@ Savollar va takliflar uchun:
 ---
 
 *© 2024 Restoran POS Tizimi. Barcha huquqlar himoyalangan.*
+
